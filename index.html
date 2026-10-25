@@ -446,6 +446,7 @@ details[open] summary { margin-bottom: 0.5rem; }
     NON_INSCRIT: "Vous n'êtes pas inscrit à cette session.",
     DEPOT_EXISTANT: "Vous avez déjà un dépôt : il ne peut plus être retiré de la session.",
     MONTANT_INVALIDE: "Montant invalide.",
+    DEPOT_DEJA_ENREGISTRE: "Dépôt déjà enregistré. Pour le modifier, demandez à l'organisateur.",
     CODE_EXISTANT: "Ce code membre existe déjà. Choisissez-en un autre.",
     CODE_INVALIDE: "Le code membre doit faire 3 à 20 caractères : lettres, chiffres, tiret.",
     PIN_INVALIDE: "Le code secret doit contenir 4 à 8 chiffres.",
@@ -642,7 +643,7 @@ details[open] summary { margin-bottom: 0.5rem; }
       }
 
       var form = el("form"); form.noValidate = true;
-      var hint = el("p", "hint", "Indiquez le montant que vous mettez dans la cagnotte. Le paiement lui-même se fait en dehors du site pour l'instant. Vous pouvez corriger votre montant tant que les inscriptions sont ouvertes.");
+      var hint = el("p", "hint", "Indiquez le montant que vous mettez dans la cagnotte. Le paiement lui-même se fait en dehors du site pour l'instant. Le dépôt est enregistré une seule fois par session.");
       hint.style.margin = "0";
       var wrap = el("div", "depform"), f = el("div", "field");
       var lab = el("label", null, "Mon dépôt (€)"), inId = "dep-in-" + s.id; lab.htmlFor = inId;
@@ -678,7 +679,9 @@ details[open] summary { margin-bottom: 0.5rem; }
         ? "Session déjà clôturée. Votre dépôt de " + money(dep) + " est enregistré et ne peut plus être modifié."
         : "Session déjà clôturée. Vous ne pouvez plus y déposer.");
       closedNote.setAttribute("role", "status");
-      card.append(head, stats4, s.ouverte ? form : closedNote, jr);
+      var doneNote = el("div", "msg ok", dep != null ? "Dépôt déjà enregistré : " + money(dep) + ". Pour le modifier, demandez à l'organisateur." : "");
+      doneNote.setAttribute("role", "status");
+      card.append(head, stats4, !s.ouverte ? closedNote : (dep != null ? doneNote : form), jr);
       box.append(card);
     });
     if (focusId) { var n = document.getElementById(focusId); if (n) { n.focus(); try { n.setSelectionRange(ss, se); } catch (e) {} } }
@@ -919,6 +922,14 @@ details[open] summary { margin-bottom: 0.5rem; }
               adminRun(rpc(d.state === "recu" ? "admin_unmark_received" : "admin_mark_received", { p_session: s.id, p_code: c.code }), $("#n-msg"));
             });
             a.append(b);
+            var rm = el("button", "btn ghost small danger", "Retirer le dépôt"); rm.type = "button";
+            var armed2 = false, timer2 = null;
+            rm.addEventListener("click", function () {
+              if (!armed2) { armed2 = true; rm.textContent = "Sûr ?"; timer2 = setTimeout(function () { armed2 = false; rm.textContent = "Retirer le dépôt"; }, 4000); return; }
+              clearTimeout(timer2); rm.disabled = true;
+              adminRun(rpc("admin_delete_deposit", { p_session: s.id, p_code: c.code }), $("#n-msg"));
+            });
+            a.append(rm);
           }
           tr.append(a);
           var part = d && d.state === "recu" && st.recuTotal > 0 ? Math.round(st.cum * d.montant / st.recuTotal * 100) / 100 : null;
