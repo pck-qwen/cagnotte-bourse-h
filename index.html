@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cagnotte bourse_H</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='8' height='8' fill='%231D5B3A'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%231D5B3A'/%3E%3Crect x='8' width='8' height='8' fill='%23E3B21C'/%3E%3Crect y='8' width='8' height='8' fill='%23E3B21C'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+[hidden] { display: none !important; }
+/* Concept : un guichet de turf. En-tête avec bande en damier (casaque de jockey),
+   carte de connexion à droite, "ticket" de membre une fois connecté,
+   puis les sessions du mois avec inscriptions, dépôts, total et journal des gains et pertes. */
+:root {
+  --bg: #EDF1EA;
+  --surface: #FAFBF8;
+  --ink: #14241B;
+  --muted: #55675C;
+  --line: #CAD5C8;
+  --turf: #1D5B3A;
+  --onturf: #FFFFFF;
+  --silk: #E3B21C;
+  --bad: #A8261C;
+  --badbg: #FBE9E6;
+  --okbg: #E2F0E6;
+  --field: #FFFFFF;
+  --brand-from: #8E4EC6; --brand-to: #4A2C17;
+  /* Une teinte par étape du mois : vert (préparer), sarcelle (inscrire), bleu (encaisser), ambre (résultats) */
+  --s1: #1D5B3A; --s1-bg: #E3F0E7; --s1-line: #B7D3BF; --s1-ink: #17482E;
+  --s2: #0E6B73; --s2-bg: #DEF0F1; --s2-line: #AFD5D9; --s2-ink: #0B565C;
+  --s3: #2B4E9B; --s3-bg: #E3E9F8; --s3-line: #B8C6E8; --s3-ink: #223E7D;
+  --s4: #9A6700; --s4-bg: #FBF0D1; --s4-line: #E6CE8A; --s4-ink: #6F4A00;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1914; --surface: #15251D; --ink: #E6EFE8; --muted: #96A99C; --line: #2A4034;
+    --turf: #55B883; --onturf: #07140D; --silk: #E3B21C; --bad: #FF9188; --badbg: #3A1B18; --okbg: #1B3326;
+    --field: #0E1914;
+    --brand-from: #C79BFF; --brand-to: #D2A679;
+    --s1: #55B883; --s1-bg: #14281D; --s1-line: #2A523C; --s1-ink: #7DD3A5;
+    --s2: #4FC1C9; --s2-bg: #10282B; --s2-line: #21525A; --s2-ink: #7ADDE3;
+    --s3: #8FA8F0; --s3-bg: #161F3B; --s3-line: #2D4079; --s3-ink: #B3C4F7;
+    --s4: #E3B21C; --s4-bg: #2D2410; --s4-line: #5E4B18; --s4-ink: #F0CB5C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1914; --surface: #15251D; --ink: #E6EFE8; --muted: #96A99C; --line: #2A4034;
+  --turf: #55B883; --onturf: #07140D; --silk: #E3B21C; --bad: #FF9188; --badbg: #3A1B18; --okbg: #1B3326;
+  --field: #0E1914;
+  --brand-from: #C79BFF; --brand-to: #D2A679;
+  --s1: #55B883; --s1-bg: #14281D; --s1-line: #2A523C; --s1-ink: #7DD3A5;
+  --s2: #4FC1C9; --s2-bg: #10282B; --s2-line: #21525A; --s2-ink: #7ADDE3;
+  --s3: #8FA8F0; --s3-bg: #161F3B; --s3-line: #2D4079; --s3-ink: #B3C4F7;
+  --s4: #E3B21C; --s4-bg: #2D2410; --s4-line: #5E4B18; --s4-ink: #F0CB5C;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--font-body); }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.12; margin: 0; }
+p { margin: 0; }
+.wrap {
+  max-width: 62rem; margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* En-tête */
+.top { background: var(--surface); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-block: 0.9rem; }
+.brand { font: 800 30px/1 var(--font-display); letter-spacing: -0.01em; display: flex; align-items: center; gap: 0.6rem; }
+.brand-name { color: var(--brand-to); background: linear-gradient(90deg, var(--brand-from), var(--brand-to)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.brand i { width: 1.6rem; height: 1.6rem; border-radius: 3px; flex: none;
+  background: repeating-conic-gradient(var(--turf) 0 25%, var(--silk) 0 50%) 0 0 / 0.8rem 0.8rem; }
+.damier { height: 12px; background: repeating-conic-gradient(var(--turf) 0 25%, var(--silk) 0 50%) 0 0 / 12px 12px; }
+nav { display: flex; gap: 0.25rem; }
+nav button { font: 500 0.9rem var(--font-body); background: none; border: 0; color: var(--muted); padding: 0.5rem 0.8rem; border-radius: 6px; cursor: pointer; }
+nav button[aria-current="page"] { color: var(--ink); background: var(--bg); box-shadow: inset 0 -2px 0 var(--turf); border-radius: 6px 6px 0 0; }
+
+main { padding-block: 2.5rem 4rem; display: grid; gap: 1.5rem; }
+.banner { padding: 0.8rem 1rem; border-radius: 8px; background: var(--badbg); color: var(--bad); font-weight: 500; }
+
+/* Vue connexion */
+.login-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem); gap: 3rem; align-items: start; }
+.intro { display: grid; gap: 1rem; padding-top: 0.5rem; }
+.intro h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; letter-spacing: -0.02em; }
+.intro p { color: var(--muted); max-width: 34rem; }
+.testnote { margin-top: 0.5rem; border: 1px dashed var(--line); border-radius: 8px; padding: 0.8rem 1rem; font-size: 0.9rem; max-width: 34rem; }
+.testnote b { font-weight: 600; }
+code, .mono { font-family: var(--font-mono); font-weight: 500; }
+.testnote code { background: var(--bg); padding: 0.1em 0.4em; border-radius: 4px; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.5rem; display: grid; gap: 1.1rem; min-width: 0; align-content: start; }
+.card h2 { font-size: 1.35rem; font-weight: 600; }
+form { display: grid; gap: 1rem; }
+.field { display: grid; gap: 0.35rem; min-width: 0; }
+label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+input, select { font: 400 1rem var(--font-body); color: var(--ink); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 0.7rem 0.8rem; width: 100%; min-width: 0; }
+input.mono { font-family: var(--font-mono); letter-spacing: 0.04em; }
+input:focus-visible, select:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--silk); outline-offset: 2px; }
+.btn { font: 600 1rem var(--font-body); background: var(--turf); color: var(--onturf); border: 0; border-radius: 8px; padding: 0.8rem 1.1rem; cursor: pointer; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); }
+.btn.small { padding: 0.45rem 0.7rem; font-size: 0.85rem; }
+.btn.danger { color: var(--bad); }
+.msg { font-size: 0.92rem; padding: 0.65rem 0.8rem; border-radius: 8px; }
+.msg[hidden] { display: none; }
+.msg.err { background: var(--badbg); color: var(--bad); }
+.msg.ok { background: var(--okbg); color: var(--ink); }
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+
+/* Espace membre : le ticket */
+.ticket { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.ticket .main { padding: 1.5rem; display: grid; gap: 1rem; min-width: 0; }
+.ticket .stub { padding: 1.5rem; border-left: 2px dashed var(--line); display: grid; align-content: center; justify-items: center; gap: 0.3rem; position: relative; text-align: center; }
+.ticket .stub::before, .ticket .stub::after { content: ""; position: absolute; left: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); }
+.ticket .stub::before { top: -11px; clip-path: inset(50% 0 0 0); }
+.ticket .stub::after { bottom: -11px; clip-path: inset(0 0 50% 0); }
+.ticket h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 800; }
+.stub small { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.stub .code { font: 500 1.4rem var(--font-mono); letter-spacing: 0.05em; }
+dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 0.8rem 1.5rem; margin: 0; }
+dt { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+dd { margin: 0; overflow-wrap: anywhere; }
+.pill { display: inline-block; font-size: 0.8rem; font-weight: 600; padding: 0.15rem 0.6rem; border-radius: 99px; background: var(--okbg); white-space: nowrap; }
+.pill.off { background: var(--badbg); color: var(--bad); }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; gap: 0.8rem; align-items: center; padding: 0.8rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.steps li::before { content: counter(s); font: 800 1.1rem var(--font-display); width: 2rem; height: 2rem; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--line); color: var(--muted); }
+.steps li.done::before { background: var(--turf); color: var(--onturf); border-color: var(--turf); content: "✓"; }
+.steps li span.tag { font-size: 0.78rem; color: var(--muted); }
+
+.sec { font-size: 1.2rem; margin: 2rem 0 0.8rem; }
+.hint { color: var(--muted); font-size: 0.95rem; margin-bottom: 0.9rem; max-width: 40rem; }
+.sess-list { display: grid; gap: 0.7rem; margin-bottom: 1rem; }
+.sess { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0.9rem; align-items: center; padding: 1rem 1.1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.sess.closed { opacity: 0.7; }
+.sess .t { font: 600 1.05rem var(--font-display); }
+.sess .m { font-size: 0.88rem; color: var(--muted); }
+.sess .side { display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+
+/* Étapes : chaque étape a son fond, du vert au bleu puis à l'ambre */
+.st1 { --stage: var(--s1); --stage-bg: var(--s1-bg); --stage-line: var(--s1-line); --stage-ink: var(--s1-ink); }
+.st2 { --stage: var(--s2); --stage-bg: var(--s2-bg); --stage-line: var(--s2-line); --stage-ink: var(--s2-ink); }
+.st3 { --stage: var(--s3); --stage-bg: var(--s3-bg); --stage-line: var(--s3-line); --stage-ink: var(--s3-ink); }
+.st4 { --stage: var(--s4); --stage-bg: var(--s4-bg); --stage-line: var(--s4-line); --stage-ink: var(--s4-ink); }
+.stage, .block { background: var(--stage-bg); border: 1px solid var(--stage-line); }
+.stage { border-top: 4px solid var(--stage); }
+.sess.stage { border-top: 1px solid var(--stage-line); }
+.block { border-radius: 8px; padding: 0.9rem 1rem; display: grid; gap: 0.6rem; min-width: 0; }
+:is(.stage, .block) .btn:not(.ghost) { background: var(--stage); color: var(--onturf); }
+:is(.stage, .block) .btn.ghost { background: var(--field); border-color: var(--stage-line); }
+:is(.stage, .block) .pill:not(.off) { background: var(--field); box-shadow: inset 0 0 0 1px var(--stage-line); }
+:is(.stage, .block) :is(th, td) { border-bottom-color: var(--stage-line); }
+:is(.stage, .block) .stat { background: var(--field); border-color: var(--stage-line); }
+.stage .arow { border-bottom-color: var(--stage-line); }
+.eyebrow { font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--stage-ink); }
+.card > .eyebrow { margin-bottom: -0.7rem; }
+.ticket { border-top: 4px solid var(--s1); }
+.steps li { background: var(--stage-bg); border-color: var(--stage-line); }
+.steps li::before { border-color: var(--stage); color: var(--stage-ink); }
+.steps li.done::before { background: var(--stage); color: var(--onturf); border-color: var(--stage); }
+.ribbon { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-radius: 8px; overflow: hidden; }
+.ribbon li { background: var(--stage); color: var(--onturf); padding: 0.55rem 0.9rem; font-size: 0.85rem; font-weight: 600; display: flex; gap: 0.5rem; align-items: baseline; }
+.ribbon li b { font: 800 1rem var(--font-display); }
+@media (max-width: 40rem) { .ribbon { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Mes sessions */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 0.8rem; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem 1rem; background: var(--bg); display: grid; gap: 0.25rem; align-content: start; min-width: 0; }
+.stat .k { font-size: 0.74rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.stat .v { font: 800 1.45rem var(--font-display); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.depform { display: grid; grid-template-columns: minmax(0, 14rem) auto; gap: 0.7rem; align-items: end; }
+.tablebox { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.num, th.num { text-align: right; }
+td.n { color: var(--muted); width: 2.5rem; }
+td.acts { white-space: nowrap; }
+td.acts > * { margin-right: 0.4rem; vertical-align: middle; }
+td.acts > *:last-child { margin-right: 0; }
+td.mono, .nw { white-space: nowrap; }
+.empty { color: var(--muted); padding: 0.6rem 0; }
+
+/* Organisateur */
+.admin-grid { display: grid; grid-template-columns: minmax(0, 19.5rem) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.stack { display: grid; gap: 1.5rem; min-width: 0; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; width: fit-content; }
+.seg button { font: 500 0.9rem var(--font-body); padding: 0.5rem 1rem; background: var(--surface); color: var(--muted); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--turf); color: var(--onturf); }
+.seg button:focus-visible { outline: 3px solid var(--silk); outline-offset: -3px; }
+.arow { display: grid; gap: 0.5rem; padding: 1rem 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.arow:first-child { padding-top: 0; }
+.arow:last-child { border-bottom: 0; padding-bottom: 0; }
+.arow .top2 { display: flex; justify-content: space-between; gap: 0.8rem; flex-wrap: wrap; align-items: baseline; }
+.who { font-size: 0.88rem; color: var(--muted); }
+.countline { font: 600 1.05rem var(--font-display); }
+.line2 { display: flex; gap: 0.4rem 1.2rem; flex-wrap: wrap; font-variant-numeric: tabular-nums; align-items: center; }
+details summary { cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+details[open] summary { margin-bottom: 0.5rem; }
+.pinline { display: flex; gap: 0.5rem; }
+.pinline input { flex: 1; }
+.given { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+@media (max-width: 52rem) {
+  .login-grid, .admin-grid { grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+}
+@media (max-width: 30rem) {
+  .row { grid-template-columns: minmax(0, 1fr); }
+  .depform { grid-template-columns: minmax(0, 1fr); }
+  .ticket { grid-template-columns: minmax(0, 1fr); }
+  .ticket .stub { border-left: 0; border-top: 2px dashed var(--line); }
+  .ticket .stub::before, .ticket .stub::after { display: none; }
+  .sess { grid-template-columns: minmax(0, 1fr); }
+  .sess .side { justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn { transition: opacity 0.15s; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar">
+    <div class="brand"><i aria-hidden="true"></i><span class="brand-name">Cagnotte bourse_H</span></div>
+    <nav id="nav" aria-label="Sections">
+      <button type="button" data-view="login" aria-current="page">Connexion</button>
+      <button type="button" data-view="admin">Organisateur</button>
+    </nav>
+  </div>
+  <div class="damier" aria-hidden="true"></div>
+</header>
+
+<main class="wrap">
+  <div id="banner" class="banner" role="alert" hidden></div>
+
+  <!-- Connexion -->
+  <section id="view-login">
+    <div class="login-grid" id="guest-zone">
+      <div class="intro">
+        <h1>Entrez dans la cagnotte</h1>
+        <p>Chaque membre se connecte avec son code personnel. Ensuite, vous vous inscrivez à la session du mois à laquelle nous jouons ensemble, et vous indiquez le montant de votre contribution.</p>
+      </div>
+      <form class="card stage st1" id="login-form" novalidate>
+        <p class="eyebrow">Étape 1 · Connexion</p>
+        <h2>Se connecter</h2>
+        <div class="field">
+          <label for="f-code">Code membre</label>
+          <input id="f-code" class="mono" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="MBR-001" maxlength="20">
+        </div>
+        <div class="field">
+          <label for="f-pin">Code secret</label>
+          <input id="f-pin" class="mono" type="password" inputmode="numeric" autocomplete="current-password" placeholder="••••" maxlength="8">
+        </div>
+        <div id="login-msg" class="msg err" role="alert" hidden></div>
+        <button class="btn" id="login-btn" type="submit">Entrer</button>
+        <p style="font-size:0.88rem;color:var(--muted)">Pas encore de code, ou code oublié ? Demandez-en un à l'organisateur.</p>
+      </form>
+    </div>
+
+    <div id="member-zone" hidden>
+      <div class="ticket">
+        <div class="main">
+          <div>
+            <small style="font-size:0.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em">Connexion réussie</small>
+            <h1 id="m-hello">Bonjour</h1>
+          </div>
+          <dl>
+            <div><dt>Nom</dt><dd id="m-name"></dd></div>
+            <div><dt>Téléphone</dt><dd id="m-tel"></dd></div>
+            <div><dt>E-mail</dt><dd id="m-mail"></dd></div>
+            <div><dt>Statut</dt><dd><span class="pill" id="m-status">Actif</span></dd></div>
+          </dl>
+          <div><button class="btn ghost small" id="logout" type="button">Se déconnecter</button></div>
+        </div>
+        <div class="stub">
+          <small>Code membre</small>
+          <div class="code" id="m-code"></div>
+        </div>
+      </div>
+
+      <h2 class="sec">Les sessions</h2>
+      <p class="hint">Une session dure jusqu'à un mois. Quand les inscriptions d'une session sont closes, vous pouvez déjà réserver votre place sur la session suivante, celle du mois d'après.</p>
+      <div class="sess-list" id="s-list"></div>
+      <p class="empty" id="s-empty" hidden>Aucune session n'est ouverte pour le moment. L'organisateur en ouvrira une bientôt.</p>
+      <div id="s-msg" class="msg" role="status" hidden></div>
+
+      <div id="mine" hidden>
+        <h2 class="sec">Mes sessions</h2>
+        <div class="stack" id="mine-list"></div>
+      </div>
+
+      <h2 class="sec">La suite du parcours</h2>
+      <ol class="steps">
+        <li class="done st1"><div>Se connecter avec son code</div><span class="tag">Fait</span></li>
+        <li id="step2" class="st2"><div id="step2-txt">S'inscrire à une session</div><span class="tag" id="step2-tag">À faire</span></li>
+        <li id="step3" class="st3"><div id="step3-txt">Indiquer son dépôt</div><span class="tag" id="step3-tag">Après l'inscription</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Organisateur -->
+  <section id="view-admin" hidden>
+    <div id="admin-gate" class="login-grid">
+      <div class="intro">
+        <h1>Espace organisateur</h1>
+        <p>Réservé à la personne qui gère la cagnotte : membres, sessions, réception des dépôts et résultats du jour.</p>
+      </div>
+      <form class="card stage st1" id="admin-login-form" novalidate>
+        <p class="eyebrow">Organisateur</p>
+        <h2>Se connecter</h2>
+        <div class="field"><label for="ad-mail">E-mail</label><input id="ad-mail" type="email" autocomplete="username" spellcheck="false"></div>
+        <div class="field"><label for="ad-pass">Mot de passe</label><input id="ad-pass" type="password" autocomplete="current-password"></div>
+        <div id="ad-msg" class="msg err" role="alert" hidden></div>
+        <button class="btn" id="ad-btn" type="submit">Entrer</button>
+      </form>
+    </div>
+    <div id="admin-panel" hidden>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem"><button class="btn ghost small" id="admin-logout" type="button">Se déconnecter (organisateur)</button></div>
+    <ol class="ribbon" aria-label="Déroulé d'un mois">
+      <li class="st1"><b>1</b> Préparer</li>
+      <li class="st2"><b>2</b> Inscrire</li>
+      <li class="st3"><b>3</b> Encaisser</li>
+      <li class="st4"><b>4</b> Résultats</li>
+    </ol>
+    <div class="seg" id="pane-tabs" role="group" aria-label="Gestion" style="margin-bottom:1.5rem">
+      <button type="button" data-pane="members" aria-pressed="true">Membres</button>
+      <button type="button" data-pane="sessions" aria-pressed="false">Sessions</button>
+    </div>
+
+    <div id="pane-members">
+      <div class="admin-grid">
+        <form class="card stage st1" id="add-form" novalidate>
+          <p class="eyebrow">Étape 1 · Préparer</p>
+          <h2>Ajouter un membre</h2>
+          <div class="row">
+            <div class="field"><label for="a-code">Code membre</label><input id="a-code" class="mono" type="text" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="MBR-002"></div>
+            <div class="field"><label for="a-prenom">Prénom</label><input id="a-prenom" type="text" autocomplete="off" maxlength="40"></div>
+          </div>
+          <div class="field"><label for="a-nom">Nom</label><input id="a-nom" type="text" autocomplete="off" maxlength="60"></div>
+          <div class="field"><label for="a-tel">Téléphone</label><input id="a-tel" type="tel" autocomplete="off" maxlength="25"></div>
+          <div class="field"><label for="a-mail">E-mail</label><input id="a-mail" type="email" autocomplete="off" maxlength="80"></div>
+          <div class="field">
+            <label for="a-pin">Code secret (4 à 8 chiffres)</label>
+            <div class="pinline">
+              <input id="a-pin" class="mono" type="text" inputmode="numeric" autocomplete="off" maxlength="8">
+              <button class="btn ghost small" id="a-gen" type="button">Générer</button>
+            </div>
+          </div>
+          <div id="add-msg" class="msg" role="status" hidden></div>
+          <button class="btn" type="submit" id="add-btn">Créer le membre</button>
+        </form>
+
+        <div class="card stage st2">
+          <p class="eyebrow">Étape 2 · Inscrire</p>
+          <h2>Membres</h2>
+          <div class="field">
+            <label for="m-filter">Afficher</label>
+            <select id="m-filter"></select>
+          </div>
+          <p class="countline" id="m-count-line"></p>
+          <div id="list-msg" class="msg" role="status" hidden></div>
+          <div class="tablebox">
+            <table>
+              <thead><tr><th>N°</th><th>Code</th><th>Nom</th><th>Téléphone</th><th>Statut</th><th>Actions</th></tr></thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="no-members" hidden></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="pane-sessions" hidden>
+      <div class="admin-grid">
+        <div class="stack">
+          <form class="card stage st1" id="sess-form" novalidate>
+            <p class="eyebrow">Étape 1 · Préparer</p>
+            <h2>Ouvrir une session</h2>
+            <div class="field"><label for="n-titre">Nom de la session</label><input id="n-titre" type="text" maxlength="60" placeholder="Session de novembre" autocomplete="off"></div>
+            <div class="field"><label for="n-type">Type de session</label><select id="n-type"></select></div>
+            <div class="row">
+              <div class="field"><label for="n-debut">Début</label><input id="n-debut" type="date"></div>
+              <div class="field"><label for="n-fin">Fin</label><input id="n-fin" type="date"></div>
+            </div>
+            <p class="who">Vous pouvez ouvrir la session du mois suivant à l'avance : les membres pourront y réserver leur place.</p>
+            <div id="n-msg" class="msg" role="status" hidden></div>
+            <button class="btn" type="submit" id="n-btn">Ouvrir la session</button>
+          </form>
+
+          <form class="card stage st4" id="res-form" novalidate>
+            <p class="eyebrow">Étape 4 · Résultats</p>
+            <h2>Résultat du jour</h2>
+            <div class="field"><label for="r-sess">Session</label><select id="r-sess"></select></div>
+            <div class="row">
+              <div class="field"><label for="r-date">Jour</label><input id="r-date" type="date"></div>
+              <div class="field"><label for="r-sens">Gain ou perte</label>
+                <select id="r-sens"><option value="G">G · Gain (+)</option><option value="P">Perte (−)</option></select>
+              </div>
+            </div>
+            <div class="field"><label for="r-mont">Montant du jour (€, sans signe)</label><input id="r-mont" class="mono" type="text" inputmode="decimal" maxlength="9" placeholder="35" autocomplete="off"></div>
+            <div id="r-msg" class="msg" role="status" hidden></div>
+            <button class="btn" type="submit" id="r-btn">Ajouter au journal</button>
+          </form>
+        </div>
+
+        <div class="card stage st2">
+          <p class="eyebrow">Étape 2 · Inscrire</p>
+          <h2>Sessions <span id="sess-count" style="font-weight:400;color:var(--muted);font-size:1rem"></span></h2>
+          <div id="sess-admin"></div>
+          <p class="empty" id="no-sess" hidden>Aucune session pour l'instant. Ouvrez la première avec le formulaire.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  </section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function () {
+  var SUPABASE_URL = "https://jlaubyelyvcgpycxpfoq.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_KHQ23NEtFvAmVveTqI9EFQ_If3919lG";
+  var $ = function (s) { return document.querySelector(s); };
+  var sb = null;
+  try {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, storageKey: "cbh-organisateur" } });
+  } catch (e) { sb = null; }
+
+  var CODE_RE = /^[A-Z0-9_-]{3,20}$/;
+  var TYPES = { SG: "Simples gagnants", SQ: "Session Quinté", SM: "Session Multi" };
+  var cred = null, member = null, mSessions = [];
+  var drafts = {}, notes = {};
+  var A = { members: [], sessions: [], inscriptions: [], depots: [], resultats: [] };
+  var mFilter = null, adminOn = false;
+  var ERR = {
+    IDENTIFIANTS_INVALIDES: "Code membre ou code secret incorrect. Vérifiez et réessayez.",
+    TROP_D_ESSAIS: "Trop d'essais. Patientez 15 minutes avant de réessayer.",
+    COMPTE_SUSPENDU: "Votre accès est suspendu. Contactez l'organisateur.",
+    SESSION_CLOTUREE: "Les inscriptions de cette session sont closes.",
+    NON_INSCRIT: "Vous n'êtes pas inscrit à cette session.",
+    DEPOT_EXISTANT: "Vous avez déjà un dépôt : il ne peut plus être retiré de la session.",
+    MONTANT_INVALIDE: "Montant invalide.",
+    CODE_EXISTANT: "Ce code membre existe déjà. Choisissez-en un autre.",
+    CODE_INVALIDE: "Le code membre doit faire 3 à 20 caractères : lettres, chiffres, tiret.",
+    PIN_INVALIDE: "Le code secret doit contenir 4 à 8 chiffres.",
+    PRENOM_MANQUANT: "Indiquez au moins le prénom du membre.",
+    SESSION_INVALIDE: "Session invalide : vérifiez le nom, le type et les dates.",
+    JOUR_HORS_SESSION: "Ce jour n'est pas dans la période de la session.",
+    INTROUVABLE: "Élément introuvable.",
+    NON_AUTORISE: "Accès réservé à l'organisateur connecté."
+  };
+  function errText(c) { return ERR[c] || "Une erreur est survenue. Réessayez dans un instant."; }
+
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function norm(c) { return String(c || "").toUpperCase().replace(/\s+/g, ""); }
+  function show(node, text, kind) { node.hidden = !text; node.textContent = text || ""; if (kind) node.className = "msg " + kind; }
+  function store(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+  function load(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function parseAmount(v) { var n = parseFloat(String(v).replace(/\s/g, "").replace(",", ".")); return isFinite(n) ? Math.round(n * 100) / 100 : NaN; }
+  function money(n) { return Number(n).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €"; }
+  function signed(n) { return (n > 0 ? "+" : n < 0 ? "−" : "") + money(Math.abs(n)); }
+  function gpPill(n) { return el("span", "pill" + (n < 0 ? " off" : ""), n > 0 ? "G +" : n < 0 ? "P −" : "="); }
+  function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function fmtDay(iso, long) {
+    try { return new Date(iso + "T12:00:00").toLocaleDateString("fr-FR", long ? { day: "numeric", month: "long", year: "numeric" } : { weekday: "short", day: "numeric", month: "short" }); }
+    catch (e) { return iso; }
+  }
+  function plural(n, one, many) { return n + " " + (n > 1 ? many : one); }
+  function pctText(p) { return (p * 100).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " %"; }
+  function titleOf(s) { return s.titre || (s.type + " du " + fmtDay(s.date_debut, true)); }
+  function typeOf(s) { return s.type + " · " + (TYPES[s.type] || ""); }
+  function periodOf(s) { return "Du " + fmtDay(s.date_debut, true) + " au " + fmtDay(s.date_fin, true); }
+  function banner(t) { var b = $("#banner"); b.hidden = !t; b.textContent = t || ""; }
+
+  function rpc(name, args) {
+    if (!sb) return Promise.reject(new Error("no-client"));
+    return sb.rpc(name, args || {}).then(function (r) {
+      if (r.error) throw r.error;
+      return r.data;
+    });
+  }
+
+  /* Navigation */
+  function showView(name) {
+    $("#view-login").hidden = name !== "login";
+    $("#view-admin").hidden = name !== "admin";
+    document.querySelectorAll("#nav button").forEach(function (b) {
+      if (b.dataset.view === name) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
+  }
+  document.querySelectorAll("#nav button").forEach(function (b) { b.addEventListener("click", function () { showView(b.dataset.view); }); });
+
+  /* ===== Membre ===== */
+  function enter(m) {
+    member = m;
+    $("#guest-zone").hidden = true;
+    $("#member-zone").hidden = false;
+    $("#m-hello").textContent = "Bonjour " + (m.prenom || "") + " !";
+    $("#m-name").textContent = ((m.prenom || "") + " " + (m.nom || "")).trim() || "—";
+    $("#m-tel").textContent = m.telephone || "—";
+    $("#m-mail").textContent = m.email || "—";
+    $("#m-code").textContent = m.code;
+    refreshMember();
+  }
+  function leave() {
+    member = null; cred = null; mSessions = []; drafts = {}; notes = {};
+    show($("#s-msg"), ""); store("cbh_m", null);
+    $("#member-zone").hidden = true; $("#guest-zone").hidden = false;
+    $("#f-pin").value = ""; $("#f-code").focus();
+  }
+  $("#logout").addEventListener("click", leave);
+
+  function refreshMember() {
+    if (!cred) return Promise.resolve();
+    return rpc("member_overview", { p_code: cred.code, p_pin: cred.pin }).then(function (r) {
+      if (!r || !r.ok) { if (r && r.erreur) { leave(); show($("#login-msg"), errText(r.erreur), "err"); } return; }
+      mSessions = r.sessions || [];
+      renderSessions();
+    }).catch(function () {});
+  }
+
+  $("#login-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var msg = $("#login-msg"), btn = $("#login-btn");
+    var code = norm($("#f-code").value), pin = $("#f-pin").value.trim();
+    if (!CODE_RE.test(code) || !/^\d{4,8}$/.test(pin)) { show(msg, errText("IDENTIFIANTS_INVALIDES"), "err"); return; }
+    show(msg, ""); btn.disabled = true;
+    rpc("member_login", { p_code: code, p_pin: pin }).then(function (r) {
+      if (r && r.ok) { cred = { code: code, pin: pin }; store("cbh_m", JSON.stringify(cred)); enter(r.membre); }
+      else show(msg, errText(r && r.erreur), "err");
+    }).catch(function () {
+      show(msg, "Connexion impossible pour le moment. Vérifiez votre réseau et réessayez.", "err");
+    }).then(function () { btn.disabled = false; });
+  });
+
+  function sortedOpenFirst(list) { return list.slice(); }
+
+  function renderSessions() {
+    if (!member) return;
+    var list = $("#s-list"); list.textContent = "";
+    $("#s-empty").hidden = mSessions.length > 0;
+    mSessions.forEach(function (s) {
+      var open = !!s.ouverte, isIn = !!s.inscrit, hasDep = s.depot != null;
+      var row = el("div", "sess stage st2" + (open || isIn ? "" : " closed"));
+      var mid = el("div"); mid.append(el("div", "t", titleOf(s)), el("div", "m", typeOf(s) + " · " + periodOf(s)));
+      var side = el("div", "side");
+      if (isIn) {
+        side.append(el("span", "pill", "Inscrit"));
+        if (open && !hasDep) {
+          var out = el("button", "btn ghost small", "Me retirer"); out.type = "button";
+          out.addEventListener("click", function () {
+            out.disabled = true; show($("#s-msg"), "");
+            rpc("member_leave", { p_code: cred.code, p_pin: cred.pin, p_session: s.id }).then(function (r) {
+              if (!r.ok) { out.disabled = false; show($("#s-msg"), errText(r.erreur), "err"); } else refreshMember();
+            }).catch(function () { out.disabled = false; show($("#s-msg"), "Le retrait n'a pas pu être enregistré. Réessayez.", "err"); });
+          });
+          side.append(out);
+        }
+      } else if (open) {
+        var inb = el("button", "btn small", "S'inscrire"); inb.type = "button";
+        inb.addEventListener("click", function () {
+          inb.disabled = true; show($("#s-msg"), "");
+          rpc("member_join", { p_code: cred.code, p_pin: cred.pin, p_session: s.id }).then(function (r) {
+            if (!r.ok) { inb.disabled = false; show($("#s-msg"), errText(r.erreur), "err"); return; }
+            show($("#s-msg"), "Inscription enregistrée pour « " + titleOf(s) + " ». Indiquez maintenant votre dépôt dans « Mes sessions ».", "ok");
+            refreshMember();
+          }).catch(function () { inb.disabled = false; show($("#s-msg"), "L'inscription n'a pas pu être enregistrée. Réessayez.", "err"); });
+        });
+        side.append(inb);
+      } else {
+        side.append(el("span", "pill off", "Inscriptions closes"));
+      }
+      row.append(mid, side); list.append(row);
+    });
+    renderMine();
+  }
+
+  function gpJournal(rows, onRemove) {
+    if (!rows.length) return el("p", "empty", "Aucun résultat enregistré pour le moment.");
+    var box = el("div", "tablebox"), t = el("table"), hr = el("tr");
+    ["Jour", "G / P", "Montant du jour", "Cumul"].forEach(function (h, i) { hr.append(el("th", i > 1 ? "num" : null, h)); });
+    if (onRemove) hr.append(el("th"));
+    var thead = el("thead"); thead.append(hr); t.append(thead);
+    var tb = el("tbody");
+    rows.forEach(function (r) {
+      var tr = el("tr");
+      tr.append(el("td", null, fmtDay(r.jour)));
+      var c = el("td"); c.append(gpPill(Number(r.montant))); tr.append(c);
+      tr.append(el("td", "num", signed(Number(r.montant))), el("td", "num", signed(Number(r.cumul))));
+      if (onRemove) {
+        var a = el("td"), b = el("button", "btn ghost small danger", "Retirer"); b.type = "button";
+        b.addEventListener("click", function () { b.disabled = true; onRemove(r, b); });
+        a.append(b); tr.append(a);
+      }
+      tb.append(tr);
+    });
+    t.append(tb); box.append(t); return box;
+  }
+  function stat(k, v, pill, sub) {
+    var s = el("div", "stat"); s.append(el("span", "k", k));
+    var vv = el("span", "v", v); if (pill !== undefined) vv.append(gpPill(pill)); s.append(vv);
+    if (sub) s.append(el("span", "who", sub)); return s;
+  }
+  function setNote(sid, text, kind) { notes[sid] = { text: text, kind: kind }; renderMine(); }
+
+  function renderMine() {
+    if (!member) return;
+    var box = $("#mine-list");
+    var ae = document.activeElement, focusId = null, ss = 0, se = 0;
+    if (ae && ae.id && ae.id.indexOf("dep-in-") === 0) { focusId = ae.id; ss = ae.selectionStart; se = ae.selectionEnd; }
+    box.textContent = "";
+    var mine = mSessions.filter(function (s) { return s.inscrit; });
+    $("#mine").hidden = mine.length === 0;
+    var allDep = mine.length > 0;
+    mine.forEach(function (s) {
+      var dep = s.depot != null ? Number(s.depot) : null;
+      if (dep == null) allDep = false;
+      var card = el("div", "card stage st3");
+      var head = el("div");
+      var eb = el("p", "eyebrow", "Étape 3 · Mon dépôt"); eb.style.marginBottom = "0.25rem";
+      head.append(eb, el("h2", null, titleOf(s)));
+      var meta = el("p", "who", typeOf(s) + " · " + periodOf(s) + (s.ouverte ? "" : " · inscriptions closes")); meta.style.marginTop = "0.3rem";
+      head.append(meta);
+
+      var stats4 = el("div", "stats");
+      var recuTxt = dep == null ? "Pas encore de dépôt" : s.recu === "recu" ? "Reçu par l'organisateur" :
+        s.recu === "modifie" ? "Montant modifié : à reconfirmer par l'organisateur" : "En attente de réception";
+      stats4.append(stat("Mon dépôt", dep != null ? money(dep) : "—", undefined, recuTxt));
+      stats4.append(stat("Total de la session", money(s.total), undefined, "dont " + money(s.total_recu) + " reçus"));
+      stats4.append(stat("Gagné ou perdu", signed(Number(s.cumul)) + " ", Number(s.cumul), "Tous membres confondus"));
+      if (dep != null && s.recu === "recu") {
+        stats4.append(stat("Ma part du résultat", signed(Number(s.ma_part)) + " ", Number(s.ma_part),
+          pctText(Number(s.pct)) + " de la cagnotte reçue · votre dépôt vaut " + money(dep + Number(s.ma_part))));
+      } else {
+        stats4.append(stat("Ma part du résultat", "—", undefined, "Calculée dès que l'organisateur a reçu votre dépôt"));
+      }
+
+      var form = el("form"); form.noValidate = true;
+      var hint = el("p", "hint", "Indiquez le montant que vous mettez dans la cagnotte. Le paiement lui-même se fait en dehors du site pour l'instant. Vous pouvez corriger votre montant tant que les inscriptions sont ouvertes.");
+      hint.style.margin = "0";
+      var wrap = el("div", "depform"), f = el("div", "field");
+      var lab = el("label", null, "Mon dépôt (€)"), inId = "dep-in-" + s.id; lab.htmlFor = inId;
+      var inp = el("input", "mono");
+      inp.id = inId; inp.type = "text"; inp.inputMode = "decimal"; inp.maxLength = 9; inp.placeholder = "20"; inp.autocomplete = "off";
+      inp.value = drafts[s.id] !== undefined ? drafts[s.id] : (dep != null ? String(dep).replace(".", ",") : "");
+      inp.addEventListener("input", function () { drafts[s.id] = inp.value; });
+      f.append(lab, inp);
+      var btn = el("button", "btn", "Enregistrer mon dépôt"); btn.type = "submit";
+      wrap.append(f, btn);
+      var note = notes[s.id];
+      var nm = el("div", "msg" + (note ? " " + note.kind : ""), note ? note.text : "");
+      nm.setAttribute("role", "status"); nm.hidden = !note;
+      form.append(hint, wrap, nm);
+      form.addEventListener("submit", function (ev) {
+        ev.preventDefault();
+        var v = parseAmount(inp.value);
+        if (!(v > 0) || v > 100000) { setNote(s.id, "Indiquez un montant en euros, supérieur à zéro.", "err"); return; }
+        btn.disabled = true;
+        rpc("member_set_deposit", { p_code: cred.code, p_pin: cred.pin, p_session: s.id, p_montant: v }).then(function (r) {
+          if (!r.ok) { setNote(s.id, errText(r.erreur), "err"); return; }
+          delete drafts[s.id];
+          setNote(s.id, "Dépôt enregistré : " + money(v) + ". L'organisateur le voit tout de suite.", "ok");
+          refreshMember();
+        }).catch(function () { setNote(s.id, "Le dépôt n'a pas pu être enregistré. Réessayez dans un instant.", "err"); });
+      });
+
+      var jr = el("div", "block st4");
+      var jh = el("h3", null, "Journal des gains et pertes"); jh.style.cssText = "font-size:1.05rem";
+      jr.append(el("p", "eyebrow", "Étape 4 · Résultats"), jh, gpJournal(s.journal || []));
+
+      var closedNote = el("div", "msg err", dep != null
+        ? "Session déjà clôturée. Votre dépôt de " + money(dep) + " est enregistré et ne peut plus être modifié."
+        : "Session déjà clôturée. Vous ne pouvez plus y déposer.");
+      closedNote.setAttribute("role", "status");
+      card.append(head, stats4, s.ouverte ? form : closedNote, jr);
+      box.append(card);
+    });
+    if (focusId) { var n = document.getElementById(focusId); if (n) { n.focus(); try { n.setSelectionRange(ss, se); } catch (e) {} } }
+
+    var s2 = $("#step2"), s3 = $("#step3");
+    if (mine.length) { s2.className = "st2 done"; $("#step2-txt").textContent = "Inscrit à " + plural(mine.length, "session", "sessions"); $("#step2-tag").textContent = "Fait"; }
+    else { s2.className = "st2"; $("#step2-txt").textContent = "S'inscrire à une session"; $("#step2-tag").textContent = "À faire"; }
+    if (mine.length && allDep) { s3.className = "st3 done"; $("#step3-txt").textContent = mine.length > 1 ? "Dépôts indiqués" : "Dépôt indiqué"; $("#step3-tag").textContent = "Fait"; }
+    else { s3.className = "st3"; $("#step3-txt").textContent = "Indiquer son dépôt"; $("#step3-tag").textContent = mine.length ? "À faire" : "Après l'inscription"; }
+  }
+
+  /* ===== Organisateur ===== */
+  function randomPin() { var a = new Uint32Array(1); crypto.getRandomValues(a); return String(1000 + (a[0] % 9000)); }
+  $("#a-gen").addEventListener("click", function () { $("#a-pin").value = randomPin(); });
+  function mini(label, full, extra) { var b = el("button", "btn ghost small" + (extra ? " " + extra : ""), label); b.type = "button"; b.title = full; b.setAttribute("aria-label", full); return b; }
+  function findSession(id) { return A.sessions.filter(function (s) { return s.id === id; })[0] || null; }
+  function sortSessions(list) {
+    return list.slice().sort(function (a, b) {
+      if (!!a.ouverte !== !!b.ouverte) return a.ouverte ? -1 : 1;
+      return String(b.date_debut).localeCompare(String(a.date_debut));
+    });
+  }
+  function codeName(code) {
+    var m = A.members.filter(function (x) { return x.code === code; })[0];
+    return m ? ((m.prenom || "") + " " + (m.nom || "")).trim() || code : code;
+  }
+  function sStats(sid) {
+    var ds = A.depots.filter(function (d) { return d.session_id === sid; }).map(function (d) {
+      var st = d.recu_montant == null ? "attente" : Number(d.recu_montant) === Number(d.montant) ? "recu" : "modifie";
+      return { code: d.code, montant: Number(d.montant), state: st };
+    });
+    var total = 0, recuTotal = 0;
+    ds.forEach(function (d) { total += d.montant; if (d.state === "recu") recuTotal += d.montant; });
+    var cum = 0;
+    var rows = A.resultats.filter(function (r) { return r.session_id === sid; }).sort(function (a, b) { return a.jour < b.jour ? -1 : 1; })
+      .map(function (r) { cum += Number(r.montant); return { jour: r.jour, montant: Number(r.montant), cum: cum, cumul: cum }; });
+    return { deposits: ds, total: total, recuTotal: recuTotal, rows: rows, cum: cum };
+  }
+  function adminRun(p, msgNode) {
+    return p.then(function (r) {
+      if (r && r.ok === false) { show(msgNode || $("#list-msg"), errText(r.erreur), "err"); return false; }
+      return refreshAdmin().then(function () { return true; });
+    }).catch(function () { show(msgNode || $("#list-msg"), "L'opération n'a pas pu être enregistrée. Réessayez.", "err"); return false; });
+  }
+  function refreshAdmin() {
+    return rpc("admin_overview").then(function (r) {
+      if (!r || !r.ok) return;
+      A = { members: r.members || [], sessions: r.sessions || [], inscriptions: r.inscriptions || [], depots: r.depots || [], resultats: r.resultats || [] };
+      renderAdmin();
+    }).catch(function () {});
+  }
+  function renderAdmin() { renderMemberFilter(); renderMembersTable(); renderResSelect(); renderAdminSessions(); }
+
+  function setAdmin(on) {
+    adminOn = on;
+    $("#admin-gate").hidden = on; $("#admin-panel").hidden = !on;
+    if (on) refreshAdmin();
+  }
+  $("#admin-login-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var msg = $("#ad-msg"), btn = $("#ad-btn");
+    var mail = $("#ad-mail").value.trim(), pass = $("#ad-pass").value;
+    if (!mail || !pass) { show(msg, "Indiquez votre e-mail et votre mot de passe.", "err"); return; }
+    if (!sb) { show(msg, "Connexion impossible pour le moment.", "err"); return; }
+    btn.disabled = true; show(msg, "");
+    sb.auth.signInWithPassword({ email: mail, password: pass }).then(function (r) {
+      if (r.error) { show(msg, "E-mail ou mot de passe incorrect.", "err"); return; }
+      return rpc("admin_overview").then(function (o) {
+        if (!o || !o.ok) { show(msg, "Ce compte n'est pas autorisé comme organisateur.", "err"); return sb.auth.signOut(); }
+        $("#ad-pass").value = ""; setAdmin(true);
+      });
+    }).catch(function () { show(msg, "Connexion impossible pour le moment. Réessayez.", "err"); }).then(function () { btn.disabled = false; });
+  });
+  $("#admin-logout").addEventListener("click", function () {
+    sb.auth.signOut().then(function () { A = { members: [], sessions: [], inscriptions: [], depots: [], resultats: [] }; setAdmin(false); });
+  });
+
+  document.querySelectorAll("#pane-tabs button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("#pane-tabs button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      $("#pane-members").hidden = b.dataset.pane !== "members";
+      $("#pane-sessions").hidden = b.dataset.pane !== "sessions";
+    });
+  });
+
+  function renderMemberFilter() {
+    var sel = $("#m-filter"), sorted = sortSessions(A.sessions);
+    if (mFilter === null && sorted.length) mFilter = sorted[0].id;
+    if (mFilter && !findSession(mFilter)) mFilter = sorted.length ? sorted[0].id : "";
+    sel.textContent = "";
+    var all = el("option", null, "Tous les membres enregistrés"); all.value = ""; sel.append(all);
+    sorted.forEach(function (s) { var o = el("option", null, "Inscrits à : " + titleOf(s) + " (" + s.type + ")"); o.value = s.id; sel.append(o); });
+    sel.value = mFilter || "";
+  }
+  $("#m-filter").addEventListener("change", function () { mFilter = this.value; renderMembersTable(); });
+
+  function renderMembersTable() {
+    var body = $("#rows"); body.textContent = "";
+    var total = A.members.length, rows = A.members, sess = mFilter ? findSession(mFilter) : null;
+    if (sess) {
+      var set = {};
+      A.inscriptions.forEach(function (c) { if (c.session_id === sess.id) set[c.code] = true; });
+      rows = A.members.filter(function (m) { return set[m.code]; });
+    }
+    $("#m-count-line").textContent = sess
+      ? plural(rows.length, "membre", "membres") + " dans « " + titleOf(sess) + " »" + (total ? " · " + total + " enregistrés au total" : "")
+      : plural(total, "membre enregistré", "membres enregistrés");
+    var empty = $("#no-members"); empty.hidden = rows.length > 0;
+    empty.textContent = sess ? "Personne n'est encore inscrit à cette session." : "Aucun membre pour l'instant. Créez le premier avec le formulaire.";
+    rows.forEach(function (m, i) {
+      var tr = el("tr");
+      tr.append(el("td", "n", String(i + 1)), el("td", "mono", m.code), el("td", null, ((m.prenom || "") + " " + (m.nom || "")).trim() || "—"), el("td", "nw", m.telephone || "—"));
+      var st = el("td"); st.append(el("span", "pill" + (m.actif === false ? " off" : ""), m.actif === false ? "Suspendu" : "Actif")); tr.append(st);
+      var acts = el("td", "acts");
+      var tog = mini(m.actif === false ? "Réact." : "Susp.", m.actif === false ? "Réactiver le membre" : "Suspendre le membre");
+      tog.addEventListener("click", function () { tog.disabled = true; adminRun(rpc("admin_set_member_active", { p_code: m.code, p_actif: m.actif === false })); });
+      var rst = mini("Nouv.", "Donner un nouveau code secret");
+      rst.addEventListener("click", function () {
+        rst.disabled = true; var pin = randomPin();
+        rpc("admin_reset_pin", { p_code: m.code, p_pin: pin }).then(function (r) {
+          if (r && r.ok === false) { show($("#list-msg"), errText(r.erreur), "err"); return; }
+          var msg = $("#list-msg"); msg.className = "msg ok"; msg.hidden = false; msg.textContent = "";
+          var ln = el("div", "given");
+          ln.append(el("span", null, "Nouveau code secret de " + (m.prenom || m.code) + " : "), el("code", null, pin), el("span", null, "Transmettez-le-lui. L'ancien ne fonctionne plus."));
+          msg.append(ln);
+        }).catch(function () { show($("#list-msg"), "Le code n'a pas pu être changé. Réessayez.", "err"); }).then(function () { rst.disabled = false; });
+      });
+      var del = mini("Suppr.", "Supprimer le membre", "danger"), armed = false, timer = null;
+      del.addEventListener("click", function () {
+        if (!armed) { armed = true; del.textContent = "Sûr ?"; timer = setTimeout(function () { armed = false; del.textContent = "Suppr."; }, 4000); return; }
+        clearTimeout(timer); del.disabled = true; adminRun(rpc("admin_delete_member", { p_code: m.code }));
+      });
+      acts.append(tog, rst, del); tr.append(acts); body.append(tr);
+    });
+  }
+
+  $("#add-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var msg = $("#add-msg"), btn = $("#add-btn");
+    var code = norm($("#a-code").value), pin = $("#a-pin").value.trim(), prenom = $("#a-prenom").value.trim();
+    if (!CODE_RE.test(code)) { show(msg, errText("CODE_INVALIDE"), "err"); return; }
+    if (!prenom) { show(msg, errText("PRENOM_MANQUANT"), "err"); return; }
+    if (!/^\d{4,8}$/.test(pin)) { show(msg, errText("PIN_INVALIDE"), "err"); return; }
+    btn.disabled = true; show(msg, "");
+    rpc("admin_create_member", { p_code: code, p_prenom: prenom, p_nom: $("#a-nom").value.trim(), p_telephone: $("#a-tel").value.trim(), p_email: $("#a-mail").value.trim(), p_pin: pin }).then(function (r) {
+      if (r && r.ok === false) { show(msg, errText(r.erreur), "err"); return; }
+      msg.className = "msg ok"; msg.hidden = false; msg.textContent = "";
+      var line = el("div", "given");
+      line.append(el("span", null, "Membre créé. À transmettre à " + prenom + " : code "), el("code", null, code), el("span", null, "et code secret "), el("code", null, pin));
+      msg.append(line);
+      ["#a-code", "#a-prenom", "#a-nom", "#a-tel", "#a-mail", "#a-pin"].forEach(function (s) { $(s).value = ""; });
+      refreshAdmin();
+    }).catch(function () { show(msg, "Le membre n'a pas pu être créé. Réessayez.", "err"); }).then(function () { btn.disabled = false; });
+  });
+
+  /* Sessions (organisateur) */
+  (function () {
+    var sel = $("#n-type"); Object.keys(TYPES).forEach(function (k) { var o = el("option", null, k + " · " + TYPES[k]); o.value = k; sel.append(o); });
+    var now = new Date(), first = new Date(now.getFullYear(), now.getMonth(), 1), last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    $("#n-debut").value = ymd(first); $("#n-fin").value = ymd(last); $("#r-date").value = ymd(now);
+  })();
+  $("#sess-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var msg = $("#n-msg"), btn = $("#n-btn"); btn.disabled = true; show(msg, "");
+    rpc("admin_create_session", { p_titre: $("#n-titre").value.trim(), p_type: $("#n-type").value, p_debut: $("#n-debut").value || null, p_fin: $("#n-fin").value || null }).then(function (r) {
+      if (r && r.ok === false) { show(msg, errText(r.erreur), "err"); return; }
+      show(msg, "Session ouverte. Les membres peuvent s'y inscrire.", "ok"); $("#n-titre").value = ""; refreshAdmin();
+    }).catch(function () { show(msg, "La session n'a pas pu être créée. Réessayez.", "err"); }).then(function () { btn.disabled = false; });
+  });
+
+  function renderResSelect() {
+    var sel = $("#r-sess"), keep = sel.value; sel.textContent = "";
+    sortSessions(A.sessions).forEach(function (s) { var o = el("option", null, titleOf(s) + " (" + s.type + ")"); o.value = s.id; sel.append(o); });
+    if (keep && findSession(keep)) sel.value = keep;
+  }
+  $("#res-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var msg = $("#r-msg"), btn = $("#r-btn");
+    var sid = $("#r-sess").value, day = $("#r-date").value, v = parseAmount($("#r-mont").value);
+    if (!sid) { show(msg, "Ouvrez d'abord une session.", "err"); return; }
+    if (!day) { show(msg, "Choisissez le jour.", "err"); return; }
+    if (!(v > 0) || v > 10000000) { show(msg, "Indiquez le montant du jour, supérieur à zéro, sans signe : le sens se choisit à côté.", "err"); return; }
+    var amount = $("#r-sens").value === "P" ? -v : v;
+    btn.disabled = true; show(msg, "");
+    rpc("admin_set_result", { p_session: sid, p_jour: day, p_montant: amount }).then(function (r) {
+      if (r && r.ok === false) { show(msg, errText(r.erreur), "err"); return; }
+      show(msg, "Ajouté au journal : " + signed(amount) + " le " + fmtDay(day) + " (un jour déjà saisi est remplacé).", "ok");
+      $("#r-mont").value = ""; refreshAdmin();
+    }).catch(function () { show(msg, "Le résultat n'a pas pu être enregistré. Réessayez.", "err"); }).then(function () { btn.disabled = false; });
+  });
+
+  function renderAdminSessions() {
+    var box = $("#sess-admin"); box.textContent = "";
+    var sorted = sortSessions(A.sessions);
+    $("#sess-count").textContent = sorted.length ? "(" + sorted.length + ")" : "";
+    $("#no-sess").hidden = sorted.length > 0;
+    sorted.forEach(function (s) {
+      var st = sStats(s.id);
+      var members = A.inscriptions.filter(function (c) { return c.session_id === s.id; });
+      var row = el("div", "arow");
+      var top = el("div", "top2"), t = el("div");
+      t.append(el("div", "countline", titleOf(s)), el("div", "who", typeOf(s) + " · " + periodOf(s)));
+      var side = el("div", "side");
+      side.append(el("span", "pill" + (s.ouverte ? "" : " off"), s.ouverte ? "Inscriptions ouvertes" : "Inscriptions closes"));
+      top.append(t, side); row.append(top);
+      row.append(el("div", "line2", plural(members.length, "inscrit", "inscrits") + " · Total " + money(st.total) + " (reçu " + money(st.recuTotal) + ") · Résultat " + signed(st.cum)));
+
+      var tog = el("button", "btn ghost small", s.ouverte ? "Clôturer les inscriptions" : "Rouvrir les inscriptions"); tog.type = "button";
+      tog.addEventListener("click", function () { tog.disabled = true; adminRun(rpc("admin_set_session_open", { p_id: s.id, p_ouverte: !s.ouverte }), $("#n-msg")); });
+      var del = el("button", "btn ghost small danger", "Supprimer la session"); del.type = "button";
+      var armed = false, timer = null;
+      del.addEventListener("click", function () {
+        if (!armed) { armed = true; del.textContent = "Supprimer aussi dépôts et journal ?"; timer = setTimeout(function () { armed = false; del.textContent = "Supprimer la session"; }, 4000); return; }
+        clearTimeout(timer); del.disabled = true; adminRun(rpc("admin_delete_session", { p_id: s.id }), $("#n-msg"));
+      });
+      var bar = el("div", "line2"); bar.append(tog, del); row.append(bar);
+
+      var rec = el("div", "block st3");
+      rec.append(el("p", "eyebrow", "Étape 3 · Dépôts et réception"));
+      if (!members.length) rec.append(el("p", "empty", "Aucun inscrit pour le moment."));
+      else {
+        var box2 = el("div", "tablebox"), tb = el("table"), hr = el("tr");
+        ["Membre", "Dépôt", "Réception", "Part"].forEach(function (h, i) { hr.append(el("th", i === 1 || i === 3 ? "num" : null, h)); });
+        var th = el("thead"); th.append(hr); tb.append(th);
+        var body = el("tbody");
+        members.forEach(function (c) {
+          var d = st.deposits.filter(function (x) { return x.code === c.code; })[0];
+          var tr = el("tr");
+          tr.append(el("td", null, codeName(c.code) + " (" + c.code + ")"), el("td", "num", d ? money(d.montant) : "—"));
+          var a = el("td", "acts");
+          if (!d) a.append(el("span", "who", "Pas de dépôt"));
+          else {
+            var state = d.state === "recu" ? "Reçu" : d.state === "modifie" ? "Modifié" : "En attente";
+            a.append(el("span", "pill" + (d.state === "recu" ? "" : " off"), state));
+            var b = el("button", "btn ghost small", d.state === "recu" ? "Annuler" : "Marquer reçu"); b.type = "button";
+            b.addEventListener("click", function () {
+              b.disabled = true;
+              adminRun(rpc(d.state === "recu" ? "admin_unmark_received" : "admin_mark_received", { p_session: s.id, p_code: c.code }), $("#n-msg"));
+            });
+            a.append(b);
+          }
+          tr.append(a);
+          var part = d && d.state === "recu" && st.recuTotal > 0 ? Math.round(st.cum * d.montant / st.recuTotal * 100) / 100 : null;
+          tr.append(el("td", "num", part == null ? "—" : signed(part) + " (" + pctText(d.montant / st.recuTotal) + ")"));
+          body.append(tr);
+        });
+        tb.append(body); box2.append(tb); rec.append(box2);
+      }
+      row.append(rec);
+
+      var det = el("details", "block st4");
+      det.append(el("summary", "eyebrow", "Étape 4 · Journal (" + plural(st.rows.length, "jour", "jours") + ")"));
+      det.append(gpJournal(st.rows, function (r, b) {
+        adminRun(rpc("admin_delete_result", { p_session: s.id, p_jour: r.jour }), $("#n-msg")).then(function (ok) { if (!ok) b.disabled = false; });
+      }));
+      if (st.rows.length) det.open = true;
+      row.append(det);
+      box.append(row);
+    });
+  }
+
+  /* Démarrage */
+  if (!sb) banner("Le site n'arrive pas à charger sa base de données. Vérifiez votre connexion et rechargez la page.");
+  else {
+    sb.auth.getSession().then(function (r) {
+      if (r.data && r.data.session) {
+        rpc("admin_overview").then(function (o) { if (o && o.ok) setAdmin(true); }).catch(function () {});
+      }
+    }).catch(function () {});
+    try {
+      var saved = JSON.parse(load("cbh_m") || "null");
+      if (saved && saved.code && saved.pin) {
+        cred = saved;
+        rpc("member_login", { p_code: saved.code, p_pin: saved.pin }).then(function (r) { if (r && r.ok) enter(r.membre); else { cred = null; store("cbh_m", null); } }).catch(function () { cred = null; });
+      }
+    } catch (e) {}
+    setInterval(function () {
+      if (document.hidden) return;
+      if (member && !(document.activeElement && document.activeElement.id && document.activeElement.id.indexOf("dep-in-") === 0)) refreshMember();
+      if (adminOn) refreshAdmin();
+    }, 30000);
+  }
+})();
+</script>
+</body>
+</html>
