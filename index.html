@@ -4,61 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cagnotte bourse_H</title>
+<meta name="theme-color" content="#6A1BFF">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='8' height='8' fill='%231D5B3A'/%3E%3Crect x='8' y='8' width='8' height='8' fill='%231D5B3A'/%3E%3Crect x='8' width='8' height='8' fill='%23E3B21C'/%3E%3Crect y='8' width='8' height='8' fill='%23E3B21C'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 [hidden] { display: none !important; }
-/* Concept : un guichet de turf. En-tête avec bande en damier (casaque de jockey),
-   carte de connexion à droite, "ticket" de membre une fois connecté,
-   puis les sessions du mois avec inscriptions, dépôts, total et journal des gains et pertes. */
+/* Thème « Violet électrique » : fond #6A1BFF, titre #FFFFFF (32 px), texte #F1EBFF, bouton #C6FF3D (texte #1E0A4D) */
 :root {
-  --bg: #EDF1EA;
-  --surface: #FAFBF8;
-  --ink: #14241B;
-  --muted: #55675C;
-  --line: #CAD5C8;
-  --turf: #1D5B3A;
-  --onturf: #FFFFFF;
-  --silk: #E3B21C;
-  --bad: #A8261C;
-  --badbg: #FBE9E6;
-  --okbg: #E2F0E6;
-  --field: #FFFFFF;
-  --brand-from: #8E4EC6; --brand-to: #4A2C17;
-  /* Une teinte par étape du mois : vert (préparer), sarcelle (inscrire), bleu (encaisser), ambre (résultats) */
-  --s1: #1D5B3A; --s1-bg: #E3F0E7; --s1-line: #B7D3BF; --s1-ink: #17482E;
-  --s2: #0E6B73; --s2-bg: #DEF0F1; --s2-line: #AFD5D9; --s2-ink: #0B565C;
-  --s3: #2B4E9B; --s3-bg: #E3E9F8; --s3-line: #B8C6E8; --s3-ink: #223E7D;
-  --s4: #9A6700; --s4-bg: #FBF0D1; --s4-line: #E6CE8A; --s4-ink: #6F4A00;
+  --bg: #6A1BFF; --surface: #4A12C4; --ink: #F1EBFF; --title: #FFFFFF; --muted: #E4DAFF; --line: rgba(255,255,255,.38);
+  --turf: #C6FF3D; --onturf: #1E0A4D; --silk: #FFE45E; --dark: #1E0A4D;
+  --bad: #FFD6E0; --badbg: #8B1148; --okbg: #DDFF8F; --field: #FFFFFF;
+  --s1: #C6FF3D; --s1-bg: #1F6B45; --s1-line: rgba(255,255,255,.4); --s1-ink: #E3FFA6;
+  --s2: #5CE1F0; --s2-bg: #0B6F7E; --s2-line: rgba(255,255,255,.4); --s2-ink: #B8F6FC;
+  --s3: #A9BEFF; --s3-bg: #2B3FBF; --s3-line: rgba(255,255,255,.4); --s3-ink: #D3DDFF;
+  --s4: #FFD166; --s4-bg: #94590A; --s4-line: rgba(255,255,255,.4); --s4-ink: #FFE7B0;
   --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0E1914; --surface: #15251D; --ink: #E6EFE8; --muted: #96A99C; --line: #2A4034;
-    --turf: #55B883; --onturf: #07140D; --silk: #E3B21C; --bad: #FF9188; --badbg: #3A1B18; --okbg: #1B3326;
-    --field: #0E1914;
-    --brand-from: #C79BFF; --brand-to: #D2A679;
-    --s1: #55B883; --s1-bg: #14281D; --s1-line: #2A523C; --s1-ink: #7DD3A5;
-    --s2: #4FC1C9; --s2-bg: #10282B; --s2-line: #21525A; --s2-ink: #7ADDE3;
-    --s3: #8FA8F0; --s3-bg: #161F3B; --s3-line: #2D4079; --s3-ink: #B3C4F7;
-    --s4: #E3B21C; --s4-bg: #2D2410; --s4-line: #5E4B18; --s4-ink: #F0CB5C;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0E1914; --surface: #15251D; --ink: #E6EFE8; --muted: #96A99C; --line: #2A4034;
-  --turf: #55B883; --onturf: #07140D; --silk: #E3B21C; --bad: #FF9188; --badbg: #3A1B18; --okbg: #1B3326;
-  --field: #0E1914;
-  --brand-from: #C79BFF; --brand-to: #D2A679;
-  --s1: #55B883; --s1-bg: #14281D; --s1-line: #2A523C; --s1-ink: #7DD3A5;
-  --s2: #4FC1C9; --s2-bg: #10282B; --s2-line: #21525A; --s2-ink: #7ADDE3;
-  --s3: #8FA8F0; --s3-bg: #161F3B; --s3-line: #2D4079; --s3-ink: #B3C4F7;
-  --s4: #E3B21C; --s4-bg: #2D2410; --s4-line: #5E4B18; --s4-ink: #F0CB5C;
-  color-scheme: dark;
-}
-
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.55 var(--font-body); }
 h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.12; margin: 0; }
@@ -223,6 +186,30 @@ details[open] summary { margin-bottom: 0.5rem; }
 @media (prefers-reduced-motion: no-preference) {
   .btn { transition: opacity 0.15s; }
 }
+
+/* Ajustements du thème violet */
+h1, h2, h3 { color: var(--title); }
+.brand { font-size: 32px; }
+.brand-name { background: none; -webkit-text-fill-color: #FFFFFF; color: #FFFFFF; }
+input, select { color: var(--dark); color-scheme: light; }
+.stat { color: var(--dark); }
+.stat .k, .stat .who { color: #4A3A8A; }
+.stat .v { color: var(--dark); }
+.btn.ghost { color: var(--ink); }
+:is(.stage, .block) .btn.ghost { color: var(--dark); }
+.pill { color: var(--dark); }
+.pill.off { color: var(--bad); }
+.msg.ok { color: var(--dark); }
+.msg.err { background: var(--badbg); color: var(--bad); }
+.damier { background: repeating-conic-gradient(var(--turf) 0 25%, var(--silk) 0 50%) 0 0 / 12px 12px; }
+.ticket { border-top-color: var(--turf); }
+.ticket .stub::before, .ticket .stub::after { background: var(--bg); }
+td.n, .empty { color: var(--muted); }
+details summary { color: var(--ink); }
+@media (max-width: 26rem) { .brand i { display: none; } }
+
+/* Exemples dans les champs : discrets, pour ne pas ressembler à une valeur déjà saisie */
+::placeholder { color: #A29CBA; opacity: 1; font-style: italic; font-weight: 400; }
 </style>
 </head>
 <body>
