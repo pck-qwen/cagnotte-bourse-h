@@ -210,6 +210,12 @@ details summary { color: var(--ink); }
 
 /* Exemples dans les champs : discrets, pour ne pas ressembler à une valeur déjà saisie */
 ::placeholder { color: #A29CBA; opacity: 1; font-style: italic; font-weight: 400; }
+
+/* Six cartes de chiffres : 3 colonnes sur 2 lignes, bien équilibrées */
+.stats.six { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.stats.six .stat .v { font-size: 1.3rem; }
+@media (max-width: 40rem) { .stats.six { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 24rem) { .stats.six { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
@@ -632,6 +638,7 @@ details summary { color: var(--ink); }
         stats4.append(stat("Ma part du résultat", "—", undefined, "Calculée dès que l'organisateur a reçu votre dépôt"));
       }
 
+      if (stats4.children.length === 6) stats4.className = "stats six";
       var form = el("form"); form.noValidate = true;
       var hint = el("p", "hint", "Indiquez le montant que vous mettez dans la cagnotte. Le paiement lui-même se fait en dehors du site pour l'instant. Le dépôt est enregistré une seule fois par session.");
       hint.style.margin = "0";
