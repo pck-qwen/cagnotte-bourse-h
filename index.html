@@ -622,9 +622,12 @@ details summary { color: var(--ink); }
       stats4.append(stat("Mon dépôt", dep != null ? money(dep) : "—", undefined, recuTxt));
       stats4.append(stat("Total de la session", money(s.total), undefined, "dont " + money(s.total_recu) + " reçus"));
       stats4.append(stat("Gagné ou perdu", signed(Number(s.cumul)) + " ", Number(s.cumul), "Tous membres confondus"));
-      if (dep != null && s.recu === "recu") {
-        stats4.append(stat("Ma part du résultat", signed(Number(s.ma_part)) + " ", Number(s.ma_part),
-          pctText(Number(s.pct)) + " de la cagnotte reçue · votre dépôt vaut " + money(dep + Number(s.ma_part))));
+      var isRecu = dep != null && s.recu === "recu";
+      var brute = Number(s.ma_part_brute || 0), frais = Number(s.frais || 0), nette = Number(s.ma_part_nette || 0), fp = Number(s.frais_pct == null ? 20 : s.frais_pct);
+      if (isRecu) {
+        stats4.append(stat("Ma part brute", signed(brute) + " ", brute, pctText(Number(s.pct)) + " de la cagnotte reçue"));
+        stats4.append(stat("Frais de service (" + fp.toLocaleString("fr-FR") + " %)", frais > 0 ? "−" + money(frais) : money(0), undefined, "Prélevés uniquement sur un gain net, jamais sur une perte"));
+        stats4.append(stat("Ma part nette", signed(nette) + " ", nette, "Votre dépôt vaut " + money(dep + nette)));
       } else {
         stats4.append(stat("Ma part du résultat", "—", undefined, "Calculée dès que l'organisateur a reçu votre dépôt"));
       }
@@ -661,6 +664,12 @@ details summary { color: var(--ink); }
       var jr = el("div", "block st4");
       var jh = el("h3", null, "Journal des gains et pertes"); jh.style.cssText = "font-size:1.05rem";
       jr.append(el("p", "eyebrow", "Étape 4 · Résultats"), jh, gpJournal(s.journal || []));
+      if (isRecu) {
+        var sumr = el("div", "line2");
+        sumr.style.fontWeight = "600";
+        sumr.append(el("span", null, "Ma part brute : " + signed(brute)), el("span", null, "Frais de service (" + fp.toLocaleString("fr-FR") + " %) : " + (frais > 0 ? "−" + money(frais) : money(0))), el("span", null, "Ma part nette : " + signed(nette)));
+        jr.append(sumr);
+      }
 
       var closedNote = el("div", "msg err", dep != null
         ? "Session déjà clôturée. Votre dépôt de " + money(dep) + " est enregistré et ne peut plus être modifié."
@@ -706,6 +715,17 @@ details summary { color: var(--ink); }
     var rows = A.resultats.filter(function (r) { return r.session_id === sid; }).sort(function (a, b) { return a.jour < b.jour ? -1 : 1; })
       .map(function (r) { cum += Number(r.montant); return { jour: r.jour, montant: Number(r.montant), cum: cum, cumul: cum }; });
     return { deposits: ds, total: total, recuTotal: recuTotal, rows: rows, cum: cum };
+  }
+  function fees(s, st) {
+    var fp = Number(s.frais_pct == null ? 20 : s.frais_pct), by = {}, total = 0;
+    st.deposits.forEach(function (d) {
+      if (d.state !== "recu" || !(st.recuTotal > 0)) return;
+      var brute = Math.round(st.cum * d.montant / st.recuTotal * 100) / 100;
+      var frais = brute > 0 ? Math.round(brute * fp) / 100 : 0;
+      by[d.code] = { brute: brute, frais: frais, nette: Math.round((brute - frais) * 100) / 100, pct: d.montant / st.recuTotal };
+      total += frais;
+    });
+    return { fp: fp, by: by, total: Math.round(total * 100) / 100 };
   }
   function adminRun(p, msgNode) {
     return p.then(function (r) {
@@ -874,7 +894,8 @@ details summary { color: var(--ink); }
       var side = el("div", "side");
       side.append(el("span", "pill" + (s.ouverte ? "" : " off"), s.ouverte ? "Inscriptions ouvertes" : "Inscriptions closes"));
       top.append(t, side); row.append(top);
-      row.append(el("div", "line2", plural(members.length, "inscrit", "inscrits") + " · Total " + money(st.total) + " (reçu " + money(st.recuTotal) + ") · Résultat " + signed(st.cum)));
+      var fx = fees(s, st);
+      row.append(el("div", "line2", plural(members.length, "inscrit", "inscrits") + " · Total " + money(st.total) + " (reçu " + money(st.recuTotal) + ") · Résultat " + signed(st.cum) + " · Frais de service (" + fx.fp.toLocaleString("fr-FR") + " %) : " + money(fx.total)));
 
       var tog = el("button", "btn ghost small", s.ouverte ? "Clôturer les inscriptions" : "Rouvrir les inscriptions"); tog.type = "button";
       tog.addEventListener("click", function () { tog.disabled = true; adminRun(rpc("admin_set_session_open", { p_id: s.id, p_ouverte: !s.ouverte }), $("#n-msg")); });
@@ -891,14 +912,16 @@ details summary { color: var(--ink); }
       if (!members.length) rec.append(el("p", "empty", "Aucun inscrit pour le moment."));
       else {
         var box2 = el("div", "tablebox"), tb = el("table"), hr = el("tr");
-        ["Membre", "Dépôt", "Réception", "Part"].forEach(function (h, i) { hr.append(el("th", i === 1 || i === 3 ? "num" : null, h)); });
+        ["Membre et réception", "Dépôt", "Part brute", "Frais", "Part nette"].forEach(function (h, i) { hr.append(el("th", i >= 1 ? "num" : null, h)); });
         var th = el("thead"); th.append(hr); tb.append(th);
         var body = el("tbody");
         members.forEach(function (c) {
           var d = st.deposits.filter(function (x) { return x.code === c.code; })[0];
           var tr = el("tr");
-          tr.append(el("td", null, codeName(c.code) + " (" + c.code + ")"), el("td", "num", d ? money(d.montant) : "—"));
-          var a = el("td", "acts");
+          var first = el("td"), a = el("div");
+          a.style.cssText = "display:flex;gap:0.4rem;flex-wrap:wrap;align-items:center;margin-top:0.4rem";
+          first.append(el("div", null, codeName(c.code) + " (" + c.code + ")"), a);
+          tr.append(first, el("td", "num nw", d ? money(d.montant) : "—"));
           if (!d) a.append(el("span", "who", "Pas de dépôt"));
           else {
             var state = d.state === "recu" ? "Reçu" : d.state === "modifie" ? "Modifié" : "En attente";
@@ -918,9 +941,12 @@ details summary { color: var(--ink); }
             });
             a.append(rm);
           }
-          tr.append(a);
-          var part = d && d.state === "recu" && st.recuTotal > 0 ? Math.round(st.cum * d.montant / st.recuTotal * 100) / 100 : null;
-          tr.append(el("td", "num", part == null ? "—" : signed(part) + " (" + pctText(d.montant / st.recuTotal) + ")"));
+          var px = d ? fx.by[c.code] : null;
+          var brutTd = el("td", "num nw", px ? signed(px.brute) : "—");
+          if (px) { var sm = el("div", "who", pctText(px.pct)); brutTd.append(sm); }
+          tr.append(brutTd,
+            el("td", "num nw", px ? (px.frais > 0 ? "−" + money(px.frais) : money(0)) : "—"),
+            el("td", "num nw", px ? signed(px.nette) : "—"));
           body.append(tr);
         });
         tb.append(body); box2.append(tb); rec.append(box2);
