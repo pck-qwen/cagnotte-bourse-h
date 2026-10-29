@@ -216,6 +216,39 @@ details summary { color: var(--ink); }
 .stats.six .stat .v { font-size: 1.3rem; }
 @media (max-width: 40rem) { .stats.six { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 24rem) { .stats.six { grid-template-columns: minmax(0, 1fr); } }
+
+/* Gestion des membres */
+.sep { border: 0; border-top: 1px solid var(--line); margin: 0.2rem 0; width: 100%; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.codes2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+.codes2 > div { background: var(--field); color: var(--dark); border-radius: 8px; padding: 0.7rem 0.9rem; display: grid; gap: 0.2rem; }
+.codes2 small { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #4A3A8A; }
+.codes2 code { font: 800 1.5rem var(--font-mono); letter-spacing: 0.06em; overflow-wrap: anywhere; }
+textarea { font: 400 1rem var(--font-body); color: var(--dark); background: var(--field); border: 1px solid var(--line); border-radius: 8px; padding: 0.7rem 0.8rem; width: 100%; min-width: 0; min-height: 5rem; resize: vertical; }
+textarea:focus-visible, input[type="search"]:focus-visible { outline: 3px solid var(--silk); outline-offset: 2px; }
+label.check { display: flex; gap: 0.6rem; align-items: center; text-transform: none; letter-spacing: 0; font-size: 0.95rem; font-weight: 500; color: var(--ink); }
+label.check input { width: 1.2rem; height: 1.2rem; flex: none; accent-color: #C6FF3D; }
+.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.8rem; }
+@media (max-width: 52rem) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 30rem) { .filters, .codes2 { grid-template-columns: minmax(0, 1fr); } }
+.exportbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.exportbar a.btn { text-decoration: none; display: inline-block; }
+dialog { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; width: min(56rem, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow: auto; padding: 1.25rem; }
+dialog::backdrop { background: rgba(20, 5, 60, 0.72); }
+dialog[open] { display: grid; gap: 1rem; align-content: start; }
+.fiche-head { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.fiche-head h2 { font-size: 1.6rem; }
+#fiche-tabs { flex-wrap: wrap; }
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.pills { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.totals { font-weight: 600; }
+.mini-in { width: 7rem; padding: 0.4rem 0.5rem; }
+.pill.plain { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.pill.adm, :is(.stage, .block) .pill.adm { background: var(--silk); color: var(--dark); box-shadow: none; }
+:is(.stage, .block) .pill.plain { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--stage-line); }
+.linklike { font: 600 0.95rem var(--font-body); background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; text-align: left; }
+.linklike:focus-visible { outline: 3px solid var(--silk); outline-offset: 2px; }
+input[type="search"] { -webkit-appearance: none; appearance: none; }
 </style>
 </head>
 <body>
@@ -238,14 +271,14 @@ details summary { color: var(--ink); }
     <div class="login-grid" id="guest-zone">
       <div class="intro">
         <h1>Entrez dans la cagnotte</h1>
-        <p>Chaque membre se connecte avec son code personnel. Ensuite, vous vous inscrivez à la session du mois à laquelle nous jouons ensemble, et vous indiquez le montant de votre contribution.</p>
+        <p>Chaque membre se connecte avec son code personnel. Ensuite, vous vous inscrivez à la session du mois à laquelle nous jouons ensemble, et vous indiquez le montant de votre contribution. Pas encore membre ? Inscrivez-vous en une minute.</p>
       </div>
       <form class="card stage st1" id="login-form" novalidate>
         <p class="eyebrow">Étape 1 · Connexion</p>
         <h2>Se connecter</h2>
         <div class="field">
-          <label for="f-code">Code membre</label>
-          <input id="f-code" class="mono" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="MBR-001" maxlength="20">
+          <label for="f-code">Code utilisateur</label>
+          <input id="f-code" class="mono" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="MBR_00012" maxlength="20">
         </div>
         <div class="field">
           <label for="f-pin">Code secret</label>
@@ -253,8 +286,53 @@ details summary { color: var(--ink); }
         </div>
         <div id="login-msg" class="msg err" role="alert" hidden></div>
         <button class="btn" id="login-btn" type="submit">Entrer</button>
-        <p style="font-size:0.88rem;color:var(--muted)">Pas encore de code, ou code oublié ? Demandez-en un à l'organisateur.</p>
+        <p style="font-size:0.88rem;color:var(--muted)">Code secret oublié ? Demandez-en un nouveau à l'organisateur.</p>
+        <hr class="sep">
+        <p style="font-weight:600">Pas encore membre ?</p>
+        <button class="btn ghost" id="go-register" type="button">Je m'inscris</button>
       </form>
+
+      <form class="card stage st2" id="reg-form" novalidate hidden>
+        <p class="eyebrow">Inscription</p>
+        <h2>Je m'inscris</h2>
+        <div class="field"><label for="g-civ">Civilité</label>
+          <select id="g-civ"><option value="">Choisir…</option><option value="Madame">Madame</option><option value="Monsieur">Monsieur</option></select></div>
+        <div class="row">
+          <div class="field"><label for="g-prenom">Prénom</label><input id="g-prenom" type="text" autocomplete="given-name" maxlength="60" placeholder="Anne"></div>
+          <div class="field"><label for="g-nom">Nom</label><input id="g-nom" type="text" autocomplete="family-name" maxlength="60" placeholder="Dupont"></div>
+        </div>
+        <div class="field"><label for="g-mail">E-mail</label><input id="g-mail" type="email" autocomplete="email" spellcheck="false" maxlength="120" placeholder="anne.dupont@exemple.fr"></div>
+        <div class="field"><label for="g-tel">Téléphone</label><input id="g-tel" type="tel" autocomplete="tel" maxlength="25" placeholder="06 12 34 56 78"></div>
+        <div class="field"><label for="g-date">Date d'enregistrement</label><input id="g-date" type="text" readonly></div>
+        <div class="hp" aria-hidden="true"><label for="g-site">Ne pas remplir ce champ</label><input id="g-site" type="text" tabindex="-1" autocomplete="off"></div>
+        <p class="who">Vous serez dans le groupe « Users ». À la fin, l'application vous donne votre code utilisateur (de la forme MBR_00000) et votre code secret à 4 chiffres.</p>
+        <div id="reg-msg" class="msg err" role="alert" hidden></div>
+        <button class="btn" type="submit">Vérifier mes informations</button>
+        <button class="btn ghost" id="reg-back" type="button">Retour à la connexion</button>
+      </form>
+
+      <div class="card stage st2" id="reg-recap" hidden>
+        <p class="eyebrow">Inscription · Vérification</p>
+        <h2>Tout est correct ?</h2>
+        <dl id="reg-dl"></dl>
+        <p class="who">Une fois validée, votre fiche ne pourra plus être modifiée que par l'organisateur. En validant, vous acceptez qu'il conserve ces informations pour gérer la cagnotte ; vous pouvez en demander l'effacement à tout moment.</p>
+        <div id="reg-msg2" class="msg err" role="alert" hidden></div>
+        <button class="btn" id="reg-ok" type="button">Valider mon inscription</button>
+        <button class="btn ghost" id="reg-edit" type="button">Modifier</button>
+      </div>
+
+      <div class="card stage st1" id="reg-done" hidden>
+        <p class="eyebrow">Inscription enregistrée</p>
+        <h2 id="reg-done-h">Bienvenue !</h2>
+        <p>Notez bien ces deux codes : le code secret ne s'affichera <b>qu'une seule fois</b>.</p>
+        <div class="codes2">
+          <div><small>Code utilisateur</small><code id="reg-code"></code></div>
+          <div><small>Code secret</small><code id="reg-pin"></code></div>
+        </div>
+        <button class="btn ghost" id="reg-copy" type="button">Copier mes codes</button>
+        <div id="reg-done-msg" class="msg ok" role="status"></div>
+        <button class="btn" id="reg-finish" type="button">J'ai noté mes codes</button>
+      </div>
     </div>
 
     <div id="member-zone" hidden>
@@ -268,12 +346,16 @@ details summary { color: var(--ink); }
             <div><dt>Nom</dt><dd id="m-name"></dd></div>
             <div><dt>Téléphone</dt><dd id="m-tel"></dd></div>
             <div><dt>E-mail</dt><dd id="m-mail"></dd></div>
+            <div><dt>Groupe</dt><dd><span class="pill" id="m-group">Users</span></dd></div>
+            <div><dt>Inscrit le</dt><dd id="m-date">—</dd></div>
             <div><dt>Statut</dt><dd><span class="pill" id="m-status">Actif</span></dd></div>
           </dl>
+          <p class="who" id="m-admin-note" hidden>Vous faites partie du groupe Admin : pour gérer la cagnotte, ouvrez l'onglet « Organisateur » avec votre e-mail.</p>
+          <p class="who">Pour modifier vos informations, contactez l'organisateur.</p>
           <div><button class="btn ghost small" id="logout" type="button">Se déconnecter</button></div>
         </div>
         <div class="stub">
-          <small>Code membre</small>
+          <small>Code utilisateur</small>
           <div class="code" id="m-code"></div>
         </div>
       </div>
@@ -325,47 +407,54 @@ details summary { color: var(--ink); }
     <div class="seg" id="pane-tabs" role="group" aria-label="Gestion" style="margin-bottom:1.5rem">
       <button type="button" data-pane="members" aria-pressed="true">Membres</button>
       <button type="button" data-pane="sessions" aria-pressed="false">Sessions</button>
+      <button type="button" data-pane="reports" aria-pressed="false">Rapports</button>
     </div>
 
     <div id="pane-members">
       <div class="admin-grid">
-        <form class="card stage st1" id="add-form" novalidate>
-          <p class="eyebrow">Étape 1 · Préparer</p>
-          <h2>Ajouter un membre</h2>
-          <div class="row">
-            <div class="field"><label for="a-code">Code membre</label><input id="a-code" class="mono" type="text" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="MBR-002"></div>
-            <div class="field"><label for="a-prenom">Prénom</label><input id="a-prenom" type="text" autocomplete="off" maxlength="40"></div>
-          </div>
-          <div class="field"><label for="a-nom">Nom</label><input id="a-nom" type="text" autocomplete="off" maxlength="60"></div>
-          <div class="field"><label for="a-tel">Téléphone</label><input id="a-tel" type="tel" autocomplete="off" maxlength="25"></div>
-          <div class="field"><label for="a-mail">E-mail</label><input id="a-mail" type="email" autocomplete="off" maxlength="80"></div>
-          <div class="field">
-            <label for="a-pin">Code secret (4 à 8 chiffres)</label>
-            <div class="pinline">
-              <input id="a-pin" class="mono" type="text" inputmode="numeric" autocomplete="off" maxlength="8">
-              <button class="btn ghost small" id="a-gen" type="button">Générer</button>
+        <div class="stack">
+          <form class="card stage st1" id="add-form" novalidate>
+            <p class="eyebrow">Étape 1 · Préparer</p>
+            <h2>Ajouter un membre</h2>
+            <div class="field"><label for="a-civ">Civilité</label>
+              <select id="a-civ"><option value="">Choisir…</option><option value="Madame">Madame</option><option value="Monsieur">Monsieur</option></select></div>
+            <div class="row">
+              <div class="field"><label for="a-prenom">Prénom</label><input id="a-prenom" type="text" autocomplete="off" maxlength="60"></div>
+              <div class="field"><label for="a-nom">Nom</label><input id="a-nom" type="text" autocomplete="off" maxlength="60"></div>
             </div>
+            <div class="field"><label for="a-tel">Téléphone</label><input id="a-tel" type="tel" autocomplete="off" maxlength="25"></div>
+            <div class="field"><label for="a-mail">E-mail</label><input id="a-mail" type="email" autocomplete="off" maxlength="120"></div>
+            <p class="who">Le code utilisateur (MBR_00000) et le code secret à 4 chiffres sont créés automatiquement. Le membre est actif tout de suite.</p>
+            <div id="add-msg" class="msg" role="status" hidden></div>
+            <button class="btn" type="submit" id="add-btn">Créer le membre</button>
+          </form>
+          <div class="card stage st1">
+            <p class="eyebrow">Réglage</p>
+            <label class="check"><input type="checkbox" id="validate-toggle"> Je valide moi-même chaque nouvelle inscription</label>
+            <p class="who">Coché : un nouvel inscrit attend votre accord avant de pouvoir se connecter. Décoché : il est actif dès son inscription.</p>
           </div>
-          <div id="add-msg" class="msg" role="status" hidden></div>
-          <button class="btn" type="submit" id="add-btn">Créer le membre</button>
-        </form>
+        </div>
 
         <div class="card stage st2">
           <p class="eyebrow">Étape 2 · Inscrire</p>
           <h2>Membres</h2>
-          <div class="field">
-            <label for="m-filter">Afficher</label>
-            <select id="m-filter"></select>
+          <div id="pending-line" class="msg ok" role="status" hidden></div>
+          <div class="field"><label for="m-search">Rechercher</label><input id="m-search" type="search" placeholder="Nom, e-mail, téléphone, code" autocomplete="off"></div>
+          <div class="row">
+            <div class="field"><label for="m-statut">Statut</label><select id="m-statut"></select></div>
+            <div class="field"><label for="m-groupe">Groupe</label><select id="m-groupe"></select></div>
           </div>
+          <div class="field"><label for="m-filter">Session</label><select id="m-filter"></select></div>
           <p class="countline" id="m-count-line"></p>
           <div id="list-msg" class="msg" role="status" hidden></div>
           <div class="tablebox">
             <table>
-              <thead><tr><th>N°</th><th>Code</th><th>Nom</th><th>Téléphone</th><th>Statut</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Membre</th><th>Téléphone</th><th>Groupe</th><th>Statut</th><th>Actions</th></tr></thead>
               <tbody id="rows"></tbody>
             </table>
           </div>
           <p class="empty" id="no-members" hidden></p>
+          <div id="members-export"></div>
         </div>
       </div>
     </div>
@@ -411,9 +500,54 @@ details summary { color: var(--ink); }
         </div>
       </div>
     </div>
+    <div id="pane-reports" hidden>
+      <div class="stack">
+        <div class="card stage st3">
+          <p class="eyebrow">Rapport · Dépôts</p>
+          <h2>Dépôts</h2>
+          <div class="filters">
+            <div class="field"><label for="rd-membre">Membre</label><select id="rd-membre"></select></div>
+            <div class="field"><label for="rd-sess">Session</label><select id="rd-sess"></select></div>
+            <div class="field"><label for="rd-type">Type</label><select id="rd-type"></select></div>
+            <div class="field"><label for="rd-etat">Réception</label><select id="rd-etat"></select></div>
+          </div>
+          <p class="countline" id="rd-count"></p>
+          <div class="tablebox"><table><thead id="rd-head"></thead><tbody id="rd-rows"></tbody></table></div>
+          <div id="rd-export"></div>
+        </div>
+        <div class="card stage st4">
+          <p class="eyebrow">Rapport · Gains</p>
+          <h2>Gains et frais de service</h2>
+          <div class="filters">
+            <div class="field"><label for="rg-membre">Membre</label><select id="rg-membre"></select></div>
+            <div class="field"><label for="rg-sess">Session</label><select id="rg-sess"></select></div>
+            <div class="field"><label for="rg-type">Type</label><select id="rg-type"></select></div>
+            <div class="field"><label for="rg-etat">État de la session</label><select id="rg-etat"></select></div>
+          </div>
+          <p class="countline" id="rg-count"></p>
+          <div class="tablebox"><table><thead id="rg-head"></thead><tbody id="rg-rows"></tbody></table></div>
+          <div id="rg-export"></div>
+        </div>
+      </div>
+    </div>
   </div>
   </section>
 </main>
+
+<dialog id="fiche" aria-labelledby="fiche-title">
+  <div class="fiche-head">
+    <div><h2 id="fiche-title">Fiche membre</h2><div class="who" id="fiche-sub"></div></div>
+    <button class="btn ghost small" id="fiche-close" type="button" aria-label="Fermer la fiche">Fermer</button>
+  </div>
+  <div class="seg" id="fiche-tabs" role="group" aria-label="Fiche du membre">
+    <button type="button" data-tab="fiche" aria-pressed="true">Fiche</button>
+    <button type="button" data-tab="depots" aria-pressed="false">Dépôts</button>
+    <button type="button" data-tab="gains" aria-pressed="false">Gains</button>
+    <button type="button" data-tab="histo" aria-pressed="false">Historique</button>
+  </div>
+  <div id="fiche-msg" class="msg" role="status" hidden></div>
+  <div id="fiche-body"></div>
+</dialog>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function () {
@@ -429,12 +563,25 @@ details summary { color: var(--ink); }
   var TYPES = { SG: "Simples gagnants", SQ: "Session Quinté", SM: "Session Multi" };
   var cred = null, member = null, mSessions = [];
   var drafts = {}, notes = {};
-  var A = { members: [], sessions: [], inscriptions: [], depots: [], resultats: [] };
-  var mFilter = null, adminOn = false;
+  var A = { members: [], sessions: [], inscriptions: [], depots: [], resultats: [], moi: null, validation: "oui" };
+  var mFilter = "", adminOn = false;
   var ERR = {
-    IDENTIFIANTS_INVALIDES: "Code membre ou code secret incorrect. Vérifiez et réessayez.",
+    IDENTIFIANTS_INVALIDES: "Code utilisateur ou code secret incorrect. Vérifiez et réessayez.",
     TROP_D_ESSAIS: "Trop d'essais. Patientez 15 minutes avant de réessayer.",
     COMPTE_SUSPENDU: "Votre accès est suspendu. Contactez l'organisateur.",
+    COMPTE_EN_ATTENTE: "Votre inscription est enregistrée : l'organisateur doit encore la valider. Vous pourrez ensuite vous connecter.",
+    COMPTE_ARCHIVE: "Ce compte n'est plus actif. Contactez l'organisateur.",
+    EMAIL_DEJA_UTILISE: "Cette adresse e-mail est déjà utilisée par un autre membre.",
+    TELEPHONE_DEJA_UTILISE: "Ce numéro de téléphone est déjà utilisé par un autre membre.",
+    EMAIL_INVALIDE: "Cette adresse e-mail ne semble pas valide.",
+    TELEPHONE_INVALIDE: "Ce numéro de téléphone ne semble pas valide.",
+    CHAMP_MANQUANT: "Renseignez la civilité, le nom et le prénom.",
+    TROP_D_INSCRIPTIONS: "Beaucoup d'inscriptions en ce moment. Réessayez dans une heure ou contactez l'organisateur.",
+    DERNIER_ADMIN: "Il doit rester au moins un membre actif dans le groupe Admin.",
+    ACTION_SUR_SOI_INTERDITE: "Vous ne pouvez pas faire cette action sur votre propre fiche.",
+    MEMBRE_AVEC_HISTORIQUE: "Ce membre a déjà des dépôts : archivez-le plutôt que de le supprimer.",
+    GROUPE_INVALIDE: "Groupe invalide.",
+    STATUT_INVALIDE: "Statut invalide.",
     SESSION_CLOTUREE: "Les inscriptions de cette session sont closes.",
     NON_INSCRIT: "Vous n'êtes pas inscrit à cette session.",
     DEPOT_EXISTANT: "Vous avez déjà un dépôt : il ne peut plus être retiré de la session.",
@@ -496,7 +643,10 @@ details summary { color: var(--ink); }
     $("#guest-zone").hidden = true;
     $("#member-zone").hidden = false;
     $("#m-hello").textContent = "Bonjour " + (m.prenom || "") + " !";
-    $("#m-name").textContent = ((m.prenom || "") + " " + (m.nom || "")).trim() || "—";
+    $("#m-group").textContent = m.groupe || "Users"; $("#m-group").className = "pill" + (m.groupe === "Admin" ? " adm" : "");
+    $("#m-date").textContent = m.date_enregistrement ? fmtDate(m.date_enregistrement) : "—";
+    $("#m-admin-note").hidden = m.groupe !== "Admin";
+    $("#m-name").textContent = ((m.civilite === "Madame" ? "Mme " : m.civilite === "Monsieur" ? "M. " : "") + (m.prenom || "") + " " + (m.nom || "")).trim() || "—";
     $("#m-tel").textContent = m.telephone || "—";
     $("#m-mail").textContent = m.email || "—";
     $("#m-code").textContent = m.code;
@@ -531,6 +681,57 @@ details summary { color: var(--ink); }
     }).catch(function () {
       show(msg, "Connexion impossible pour le moment. Vérifiez votre réseau et réessayez.", "err");
     }).then(function () { btn.disabled = false; });
+  });
+
+
+  /* ===== Inscription libre ===== */
+  var regData = null, regT0 = 0, regPin = "";
+  function regShow(which) {
+    ["login-form", "reg-form", "reg-recap", "reg-done"].forEach(function (id) { document.getElementById(id).hidden = id !== which; });
+  }
+  $("#go-register").addEventListener("click", function () {
+    $("#g-date").value = new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+    regT0 = Date.now(); show($("#reg-msg"), ""); regShow("reg-form"); $("#g-civ").focus();
+  });
+  $("#reg-back").addEventListener("click", function () { regShow("login-form"); });
+  $("#reg-edit").addEventListener("click", function () { regShow("reg-form"); });
+  $("#reg-form").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var msg = $("#reg-msg");
+    var d = { civ: $("#g-civ").value, prenom: $("#g-prenom").value.trim(), nom: $("#g-nom").value.trim(), mail: $("#g-mail").value.trim(), tel: $("#g-tel").value.trim() };
+    if (!d.civ) { show(msg, "Choisissez Madame ou Monsieur.", "err"); return; }
+    if (!d.prenom || !d.nom) { show(msg, "Indiquez votre prénom et votre nom.", "err"); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.mail)) { show(msg, errText("EMAIL_INVALIDE"), "err"); return; }
+    if (d.tel.replace(/\D/g, "").length < 8) { show(msg, errText("TELEPHONE_INVALIDE"), "err"); return; }
+    show(msg, ""); regData = d;
+    var dl = $("#reg-dl"); dl.textContent = "";
+    [["Civilité", d.civ], ["Prénom", d.prenom], ["Nom", d.nom], ["E-mail", d.mail], ["Téléphone", d.tel], ["Date d'enregistrement", $("#g-date").value], ["Groupe", "Users"]].forEach(function (r) {
+      var x = el("div"); x.append(el("dt", null, r[0]), el("dd", null, r[1])); dl.append(x);
+    });
+    show($("#reg-msg2"), ""); regShow("reg-recap");
+  });
+  $("#reg-ok").addEventListener("click", function () {
+    var btn = this, msg = $("#reg-msg2"), d = regData; if (!d) return;
+    btn.disabled = true; show(msg, "");
+    var hp = $("#g-site").value || (Date.now() - regT0 < 2500 ? "vite" : "");
+    rpc("member_register", { p_civilite: d.civ, p_nom: d.nom, p_prenom: d.prenom, p_email: d.mail, p_telephone: d.tel, p_honeypot: hp }).then(function (r) {
+      if (!r || !r.ok) { show(msg, errText(r && r.erreur), "err"); return; }
+      regPin = r.pin; regData = null;
+      $("#reg-code").textContent = r.code; $("#reg-pin").textContent = r.pin;
+      $("#reg-done-h").textContent = "Bienvenue " + d.prenom + " !";
+      var dm = $("#reg-done-msg");
+      dm.textContent = r.statut === "en_attente" ? "Votre inscription est bien enregistrée. L'organisateur va la valider, vous pourrez ensuite vous connecter avec ces deux codes." : "Votre inscription est validée. Vous pouvez vous connecter avec ces deux codes.";
+      ["#g-civ", "#g-prenom", "#g-nom", "#g-mail", "#g-tel", "#g-site"].forEach(function (s) { $(s).value = ""; });
+      regShow("reg-done");
+    }).catch(function () { show(msg, "L'inscription n'a pas pu être enregistrée. Vérifiez votre réseau et réessayez.", "err"); }).then(function () { btn.disabled = false; });
+  });
+  $("#reg-copy").addEventListener("click", function () {
+    copyText("Cagnotte bourse_H\nCode utilisateur : " + $("#reg-code").textContent + "\nCode secret : " + $("#reg-pin").textContent).then(function () { this.textContent = "Codes copiés"; }.bind(this)).catch(function () { this.textContent = "Notez-les à la main"; }.bind(this));
+  });
+  $("#reg-finish").addEventListener("click", function () {
+    var c = $("#reg-code").textContent; $("#reg-code").textContent = ""; $("#reg-pin").textContent = ""; regPin = "";
+    $("#reg-copy").textContent = "Copier mes codes";
+    regShow("login-form"); $("#f-code").value = c; $("#f-pin").focus();
   });
 
   function sortedOpenFirst(list) { return list.slice(); }
@@ -697,8 +898,6 @@ details summary { color: var(--ink); }
   }
 
   /* ===== Organisateur ===== */
-  function randomPin() { var a = new Uint32Array(1); crypto.getRandomValues(a); return String(1000 + (a[0] % 9000)); }
-  $("#a-gen").addEventListener("click", function () { $("#a-pin").value = randomPin(); });
   function mini(label, full, extra) { var b = el("button", "btn ghost small" + (extra ? " " + extra : ""), label); b.type = "button"; b.title = full; b.setAttribute("aria-label", full); return b; }
   function findSession(id) { return A.sessions.filter(function (s) { return s.id === id; })[0] || null; }
   function sortSessions(list) {
@@ -743,11 +942,11 @@ details summary { color: var(--ink); }
   function refreshAdmin() {
     return rpc("admin_overview").then(function (r) {
       if (!r || !r.ok) return;
-      A = { members: r.members || [], sessions: r.sessions || [], inscriptions: r.inscriptions || [], depots: r.depots || [], resultats: r.resultats || [] };
+      A = { members: r.members || [], sessions: r.sessions || [], inscriptions: r.inscriptions || [], depots: r.depots || [], resultats: r.resultats || [], moi: r.moi || null, validation: r.validation_inscriptions || "oui" };
       renderAdmin();
     }).catch(function () {});
   }
-  function renderAdmin() { renderMemberFilter(); renderMembersTable(); renderResSelect(); renderAdminSessions(); }
+  function renderAdmin() { renderMemberFilters(); renderMembersTable(); renderReports(); renderResSelect(); renderAdminSessions(); if (ficheCode) renderFiche(); }
 
   function setAdmin(on) {
     adminOn = on;
@@ -770,7 +969,7 @@ details summary { color: var(--ink); }
     }).catch(function () { show(msg, "Connexion impossible pour le moment. Réessayez.", "err"); }).then(function () { btn.disabled = false; });
   });
   $("#admin-logout").addEventListener("click", function () {
-    sb.auth.signOut().then(function () { A = { members: [], sessions: [], inscriptions: [], depots: [], resultats: [] }; setAdmin(false); });
+    sb.auth.signOut().then(function () { A = { members: [], sessions: [], inscriptions: [], depots: [], resultats: [], moi: null, validation: "oui" }; if (ficheOpen()) dlg.close(); setAdmin(false); });
   });
 
   document.querySelectorAll("#pane-tabs button").forEach(function (b) {
@@ -778,78 +977,478 @@ details summary { color: var(--ink); }
       document.querySelectorAll("#pane-tabs button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
       $("#pane-members").hidden = b.dataset.pane !== "members";
       $("#pane-sessions").hidden = b.dataset.pane !== "sessions";
+      $("#pane-reports").hidden = b.dataset.pane !== "reports";
     });
   });
 
-  function renderMemberFilter() {
-    var sel = $("#m-filter"), sorted = sortSessions(A.sessions);
-    if (mFilter === null && sorted.length) mFilter = sorted[0].id;
-    if (mFilter && !findSession(mFilter)) mFilter = sorted.length ? sorted[0].id : "";
-    sel.textContent = "";
-    var all = el("option", null, "Tous les membres enregistrés"); all.value = ""; sel.append(all);
-    sorted.forEach(function (s) { var o = el("option", null, "Inscrits à : " + titleOf(s) + " (" + s.type + ")"); o.value = s.id; sel.append(o); });
-    sel.value = mFilter || "";
+  /* ===== Outils : libellés, dates, export ===== */
+  var STATUTS = { en_attente: "En attente", actif: "Actif", suspendu: "Suspendu", archive: "Archivé" };
+  var ACTIONS = {
+    inscription: "Inscription en ligne", creation: "Fiche créée par l'organisateur", modification_fiche: "Fiche modifiée",
+    changement_groupe: "Changement de groupe", statut_actif: "Compte validé ou réactivé", statut_suspendu: "Compte suspendu",
+    statut_archive: "Compte archivé", nouveau_code_secret: "Nouveau code secret", deblocage: "Compte débloqué",
+    suppression: "Fiche supprimée", inscription_session: "Inscrit à une session", desinscription_session: "Désinscrit d'une session",
+    depot_saisi: "Dépôt saisi par l'organisateur"
+  };
+  function fullName(m) { return ((m.prenom || "") + " " + (m.nom || "")).trim() || m.code; }
+  function statutOf(m) { return m.statut || (m.actif === false ? "suspendu" : "actif"); }
+  function fmtDate(iso) { try { return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return iso || "—"; } }
+  function fmtDateTime(iso) { try { return new Date(iso).toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); } catch (e) { return iso || "—"; } }
+  function statutPill(m) { var s = statutOf(m); return el("span", "pill" + (s === "actif" ? "" : " off"), STATUTS[s] || s); }
+  function numFr(n) { return String(Math.round(Number(n) * 100) / 100).replace(".", ","); }
+  function csvText(headers, rows) {
+    var q = function (v) { v = v == null ? "" : String(v); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    return [headers].concat(rows).map(function (r) { return r.map(q).join(";"); }).join("\r\n");
   }
-  $("#m-filter").addEventListener("change", function () { mFilter = this.value; renderMembersTable(); });
-
-  function renderMembersTable() {
-    var body = $("#rows"); body.textContent = "";
-    var total = A.members.length, rows = A.members, sess = mFilter ? findSession(mFilter) : null;
-    if (sess) {
-      var set = {};
-      A.inscriptions.forEach(function (c) { if (c.session_id === sess.id) set[c.code] = true; });
-      rows = A.members.filter(function (m) { return set[m.code]; });
-    }
-    $("#m-count-line").textContent = sess
-      ? plural(rows.length, "membre", "membres") + " dans « " + titleOf(sess) + " »" + (total ? " · " + total + " enregistrés au total" : "")
-      : plural(total, "membre enregistré", "membres enregistrés");
-    var empty = $("#no-members"); empty.hidden = rows.length > 0;
-    empty.textContent = sess ? "Personne n'est encore inscrit à cette session." : "Aucun membre pour l'instant. Créez le premier avec le formulaire.";
-    rows.forEach(function (m, i) {
-      var tr = el("tr");
-      tr.append(el("td", "n", String(i + 1)), el("td", "mono", m.code), el("td", null, ((m.prenom || "") + " " + (m.nom || "")).trim() || "—"), el("td", "nw", m.telephone || "—"));
-      var st = el("td"); st.append(el("span", "pill" + (m.actif === false ? " off" : ""), m.actif === false ? "Suspendu" : "Actif")); tr.append(st);
-      var acts = el("td", "acts");
-      var tog = mini(m.actif === false ? "Réact." : "Susp.", m.actif === false ? "Réactiver le membre" : "Suspendre le membre");
-      tog.addEventListener("click", function () { tog.disabled = true; adminRun(rpc("admin_set_member_active", { p_code: m.code, p_actif: m.actif === false })); });
-      var rst = mini("Nouv.", "Donner un nouveau code secret");
-      rst.addEventListener("click", function () {
-        rst.disabled = true; var pin = randomPin();
-        rpc("admin_reset_pin", { p_code: m.code, p_pin: pin }).then(function (r) {
-          if (r && r.ok === false) { show($("#list-msg"), errText(r.erreur), "err"); return; }
-          var msg = $("#list-msg"); msg.className = "msg ok"; msg.hidden = false; msg.textContent = "";
-          var ln = el("div", "given");
-          ln.append(el("span", null, "Nouveau code secret de " + (m.prenom || m.code) + " : "), el("code", null, pin), el("span", null, "Transmettez-le-lui. L'ancien ne fonctionne plus."));
-          msg.append(ln);
-        }).catch(function () { show($("#list-msg"), "Le code n'a pas pu être changé. Réessayez.", "err"); }).then(function () { rst.disabled = false; });
-      });
-      var del = mini("Suppr.", "Supprimer le membre", "danger"), armed = false, timer = null;
-      del.addEventListener("click", function () {
-        if (!armed) { armed = true; del.textContent = "Sûr ?"; timer = setTimeout(function () { armed = false; del.textContent = "Suppr."; }, 4000); return; }
-        clearTimeout(timer); del.disabled = true; adminRun(rpc("admin_delete_member", { p_code: m.code }));
-      });
-      acts.append(tog, rst, del); tr.append(acts); body.append(tr);
+  function copyText(t) {
+    return new Promise(function (resolve, reject) {
+      function fallback() {
+        try {
+          var ta = document.createElement("textarea"); ta.value = t; ta.style.cssText = "position:fixed;left:-9999px;top:0";
+          document.body.appendChild(ta); ta.select(); var ok = document.execCommand("copy"); document.body.removeChild(ta);
+          ok ? resolve() : reject(new Error("copy"));
+        } catch (e) { reject(e); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(resolve, fallback); else fallback();
     });
   }
+  /* Barre d'export : getTable() renvoie {headers, rows} avec les filtres actifs à l'instant du clic */
+  function exportBar(host, getTable, base) {
+    host.textContent = "";
+    var bar = el("div", "exportbar"), note = el("div", "msg ok"); note.hidden = true; note.setAttribute("role", "status");
+    var dl = el("button", "btn ghost small", "Télécharger (CSV)"); dl.type = "button";
+    dl.addEventListener("click", function () {
+      var t = getTable(), blob = new Blob(["﻿" + csvText(t.headers, t.rows)], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = base + "-" + ymd(new Date()) + ".csv";
+      document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      show(note, "Fichier prêt : " + plural(t.rows.length, "ligne", "lignes") + ". Dans Google Sheets : Fichier → Importer → Téléverser.", "ok");
+    });
+    var cp = el("button", "btn small", "Copier pour Google Sheets"); cp.type = "button";
+    cp.addEventListener("click", function () {
+      var t = getTable(), text = [t.headers].concat(t.rows).map(function (r) { return r.map(function (v) { return v == null ? "" : String(v).replace(/[\t\r\n]+/g, " "); }).join("\t"); }).join("\n");
+      copyText(text).then(function () { show(note, plural(t.rows.length, "ligne copiée", "lignes copiées") + ". Ouvrez une feuille Google, cliquez sur la case A1, puis collez.", "ok"); })
+        .catch(function () { show(note, "La copie n'a pas fonctionné. Utilisez « Télécharger (CSV) ».", "err"); });
+    });
+    var sh = el("a", "btn ghost small", "Ouvrir une feuille Google"); sh.href = "https://sheets.new"; sh.target = "_blank"; sh.rel = "noopener";
+    bar.append(cp, dl, sh); host.append(bar, note);
+  }
+  function fillSelect(sel, opts, def) {
+    var keep = sel.value; sel.textContent = "";
+    opts.forEach(function (o) { var x = el("option", null, o[1]); x.value = o[0]; sel.append(x); });
+    var vals = opts.map(function (o) { return o[0]; });
+    sel.value = vals.indexOf(keep) >= 0 ? keep : (def !== undefined ? def : vals[0]);
+  }
+  function memberByCode(code) { return A.members.filter(function (x) { return x.code === code; })[0] || null; }
+  function sessionOptions(first) {
+    return [["", first]].concat(sortSessions(A.sessions).map(function (s) { return [s.id, titleOf(s) + " (" + s.type + ")"]; }));
+  }
+  function memberOptions(first) {
+    return [["", first]].concat(A.members.map(function (m) { return [m.code, fullName(m) + " (" + m.code + ")"]; }));
+  }
+  var TYPE_OPTS = [["", "Tous les types"], ["SG", "SG · Simples gagnants"], ["SQ", "SQ · Session Quinté"], ["SM", "SM · Session Multi"]];
 
+  /* ===== Liste des membres ===== */
+  function renderMemberFilters() {
+    fillSelect($("#m-statut"), [["", "Tous sauf archivés"], ["actif", "Actifs"], ["en_attente", "En attente de validation"], ["suspendu", "Suspendus"], ["archive", "Archivés"], ["tous", "Tous"]]);
+    fillSelect($("#m-groupe"), [["", "Tous les groupes"], ["Users", "Users"], ["Admin", "Admin"]]);
+    var sorted = sortSessions(A.sessions);
+    if (mFilter && !findSession(mFilter)) mFilter = "";
+    fillSelect($("#m-filter"), [["", "Tous les membres enregistrés"]].concat(sorted.map(function (s) { return [s.id, "Inscrits à : " + titleOf(s) + " (" + s.type + ")"]; })), mFilter || "");
+    $("#validate-toggle").checked = A.validation !== "non";
+  }
+  ["#m-statut", "#m-groupe", "#m-filter"].forEach(function (s) { $(s).addEventListener("change", function () { if (s === "#m-filter") mFilter = this.value; renderMembersTable(); }); });
+  $("#m-search").addEventListener("input", function () { renderMembersTable(); });
+  $("#validate-toggle").addEventListener("change", function () {
+    var box = this; box.disabled = true;
+    rpc("admin_set_validation", { p_oui: box.checked }).then(function () { A.validation = box.checked ? "oui" : "non"; }).catch(function () { box.checked = !box.checked; }).then(function () { box.disabled = false; });
+  });
+
+  function memberRows() {
+    var st = $("#m-statut").value, gr = $("#m-groupe").value, q = $("#m-search").value.trim().toLowerCase(), sess = mFilter ? findSession(mFilter) : null;
+    var set = null;
+    if (sess) { set = {}; A.inscriptions.forEach(function (c) { if (c.session_id === sess.id) set[c.code] = true; }); }
+    return A.members.filter(function (m) {
+      var s = statutOf(m);
+      if (st === "") { if (s === "archive") return false; } else if (st !== "tous" && s !== st) return false;
+      if (gr && (m.groupe || "Users") !== gr) return false;
+      if (set && !set[m.code]) return false;
+      if (q) {
+        var hay = [m.code, m.prenom, m.nom, m.email, m.telephone].join(" ").toLowerCase();
+        if (hay.indexOf(q) < 0 && hay.replace(/\s/g, "").indexOf(q.replace(/\s/g, "")) < 0) return false;
+      }
+      return true;
+    });
+  }
+  function renderMembersTable() {
+    var body = $("#rows"); body.textContent = "";
+    var rows = memberRows(), total = A.members.length, sess = mFilter ? findSession(mFilter) : null;
+    var pend = A.members.filter(function (m) { return statutOf(m) === "en_attente"; }).length;
+    var pl = $("#pending-line");
+    pl.hidden = pend === 0; pl.textContent = "";
+    if (pend) {
+      var b = el("button", "btn small", "Voir"); b.type = "button";
+      b.addEventListener("click", function () { $("#m-statut").value = "en_attente"; renderMembersTable(); });
+      pl.append(el("span", null, plural(pend, "inscription attend", "inscriptions attendent") + " votre validation. "), b);
+    }
+    $("#m-count-line").textContent = plural(rows.length, "membre affiché", "membres affichés") + (sess ? " dans « " + titleOf(sess) + " »" : "") + " · " + total + " enregistrés au total";
+    var empty = $("#no-members"); empty.hidden = rows.length > 0;
+    empty.textContent = total ? "Aucun membre ne correspond à ces filtres." : "Aucun membre pour l'instant. Créez le premier avec le formulaire.";
+    rows.forEach(function (m) {
+      var tr = el("tr"), c1 = el("td");
+      c1.append(el("div", null, (m.civilite === "Madame" ? "Mme " : m.civilite === "Monsieur" ? "M. " : "") + fullName(m)), el("div", "who mono", m.code));
+      tr.append(c1, el("td", "nw", m.telephone || "—"));
+      var g = el("td"); g.append(el("span", "pill" + (m.groupe === "Admin" ? " adm" : ""), m.groupe || "Users"));
+      var s = el("td"); s.append(statutPill(m));
+      var acts = el("td", "acts");
+      if (statutOf(m) === "en_attente") {
+        var ok = mini("Valider", "Valider l'inscription");
+        ok.addEventListener("click", function () { ok.disabled = true; adminRun(rpc("admin_set_status", { p_code: m.code, p_statut: "actif", p_motif: null })); });
+        acts.append(ok);
+      }
+      var op = mini("Fiche", "Ouvrir la fiche de " + fullName(m));
+      op.addEventListener("click", function () { openFiche(m.code, "fiche"); });
+      acts.append(op);
+      tr.append(g, s, acts); body.append(tr);
+    });
+    exportBar($("#members-export"), function () {
+      return {
+        headers: ["N°", "Code", "Civilité", "Nom", "Prénom", "E-mail", "Téléphone", "Groupe", "Statut", "Date d'enregistrement", "Dernière connexion"],
+        rows: memberRows().map(function (m) { return [m.numero, m.code, m.civilite || "", m.nom, m.prenom, m.email, m.telephone, m.groupe || "Users", STATUTS[statutOf(m)], m.date_enregistrement ? fmtDate(m.date_enregistrement) : "", m.derniere_connexion ? fmtDateTime(m.derniere_connexion) : ""]; })
+      };
+    }, "membres");
+  }
+
+  /* Ajout d'un membre par l'organisateur */
   $("#add-form").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var msg = $("#add-msg"), btn = $("#add-btn");
-    var code = norm($("#a-code").value), pin = $("#a-pin").value.trim(), prenom = $("#a-prenom").value.trim();
-    if (!CODE_RE.test(code)) { show(msg, errText("CODE_INVALIDE"), "err"); return; }
-    if (!prenom) { show(msg, errText("PRENOM_MANQUANT"), "err"); return; }
-    if (!/^\d{4,8}$/.test(pin)) { show(msg, errText("PIN_INVALIDE"), "err"); return; }
+    var civ = $("#a-civ").value, prenom = $("#a-prenom").value.trim(), nom = $("#a-nom").value.trim();
+    if (!civ || !prenom || !nom) { show(msg, errText("CHAMP_MANQUANT"), "err"); return; }
     btn.disabled = true; show(msg, "");
-    rpc("admin_create_member", { p_code: code, p_prenom: prenom, p_nom: $("#a-nom").value.trim(), p_telephone: $("#a-tel").value.trim(), p_email: $("#a-mail").value.trim(), p_pin: pin }).then(function (r) {
+    rpc("admin_add_member", { p_civilite: civ, p_nom: nom, p_prenom: prenom, p_telephone: $("#a-tel").value.trim(), p_email: $("#a-mail").value.trim() }).then(function (r) {
       if (r && r.ok === false) { show(msg, errText(r.erreur), "err"); return; }
       msg.className = "msg ok"; msg.hidden = false; msg.textContent = "";
       var line = el("div", "given");
-      line.append(el("span", null, "Membre créé. À transmettre à " + prenom + " : code "), el("code", null, code), el("span", null, "et code secret "), el("code", null, pin));
+      line.append(el("span", null, "Membre créé. À transmettre à " + prenom + " : code "), el("code", null, r.code), el("span", null, "et code secret "), el("code", null, r.pin), el("span", null, "(affiché une seule fois)."));
       msg.append(line);
-      ["#a-code", "#a-prenom", "#a-nom", "#a-tel", "#a-mail", "#a-pin"].forEach(function (s) { $(s).value = ""; });
+      ["#a-civ", "#a-prenom", "#a-nom", "#a-tel", "#a-mail"].forEach(function (s) { $(s).value = ""; });
       refreshAdmin();
     }).catch(function () { show(msg, "Le membre n'a pas pu être créé. Réessayez.", "err"); }).then(function () { btn.disabled = false; });
   });
+
+  /* ===== Fiche d'un membre (fenêtre) ===== */
+  var ficheCode = null, ficheTab = "fiche", dlg = $("#fiche");
+  function ficheOpen() { return !!(dlg && dlg.open); }
+  function openFiche(code, tab) {
+    ficheCode = code; ficheTab = tab || "fiche";
+    show($("#fiche-msg"), "");
+    if (!dlg.open) { if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); }
+    renderFiche();
+  }
+  $("#fiche-close").addEventListener("click", function () { dlg.close ? dlg.close() : dlg.removeAttribute("open"); });
+  dlg.addEventListener("close", function () { ficheCode = null; });
+  dlg.addEventListener("click", function (ev) { if (ev.target === dlg) dlg.close(); });
+  document.querySelectorAll("#fiche-tabs button").forEach(function (b) {
+    b.addEventListener("click", function () { ficheTab = b.dataset.tab; show($("#fiche-msg"), ""); renderFiche(); });
+  });
+  function fMsg(text, kind) { show($("#fiche-msg"), text, kind); }
+  function ficheRun(p) {
+    return p.then(function (r) {
+      if (r && r.ok === false) { fMsg(errText(r.erreur), "err"); return false; }
+      return refreshAdmin().then(function () { return true; });
+    }).catch(function () { fMsg("L'opération n'a pas pu être enregistrée. Réessayez.", "err"); return false; });
+  }
+  function confirmBtn(label, sure, danger, fn) {
+    var b = el("button", "btn ghost small" + (danger ? " danger" : ""), label); b.type = "button";
+    var armed = false, timer = null;
+    b.addEventListener("click", function () {
+      if (!armed) { armed = true; b.textContent = sure; timer = setTimeout(function () { armed = false; b.textContent = label; }, 4000); return; }
+      clearTimeout(timer); b.disabled = true; fn(b);
+    });
+    return b;
+  }
+  function renderFiche() {
+    var m = ficheCode ? memberByCode(ficheCode) : null;
+    var body = $("#fiche-body"); body.textContent = "";
+    if (!m) { if (ficheOpen() && ficheCode) { dlg.close(); } return; }
+    $("#fiche-title").textContent = (m.civilite === "Madame" ? "Mme " : m.civilite === "Monsieur" ? "M. " : "") + fullName(m);
+    var sub = $("#fiche-sub"); sub.textContent = ""; sub.className = "pills";
+    sub.append(el("span", "pill plain mono", m.code), statutPill(m), el("span", "pill" + (m.groupe === "Admin" ? " adm" : " plain"), "Groupe " + (m.groupe || "Users")));
+    document.querySelectorAll("#fiche-tabs button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.tab === ficheTab ? "true" : "false"); });
+    if (ficheTab === "fiche") ficheTabFiche(m, body);
+    else if (ficheTab === "depots") ficheTabDepots(m, body);
+    else if (ficheTab === "gains") ficheTabGains(m, body);
+    else ficheTabHisto(m, body);
+  }
+
+  function field(id, label, node) { var f = el("div", "field"), l = el("label", null, label); l.htmlFor = id; node.id = id; f.append(l, node); return f; }
+  function ficheTabFiche(m, body) {
+    var self = m.code === A.moi, st = statutOf(m);
+    var f = el("form", "block st1"); f.noValidate = true;
+    f.append(el("p", "eyebrow", "Fiche"));
+    var civ = el("select"); [["Madame", "Madame"], ["Monsieur", "Monsieur"]].forEach(function (o) { var x = el("option", null, o[1]); x.value = o[0]; civ.append(x); }); civ.value = m.civilite || "Madame";
+    var prenom = el("input"); prenom.type = "text"; prenom.maxLength = 60; prenom.value = m.prenom || "";
+    var nom = el("input"); nom.type = "text"; nom.maxLength = 60; nom.value = m.nom || "";
+    var mail = el("input"); mail.type = "email"; mail.maxLength = 120; mail.value = m.email || "";
+    var tel = el("input"); tel.type = "tel"; tel.maxLength = 25; tel.value = m.telephone || "";
+    var notes = el("textarea"); notes.maxLength = 1000; notes.value = m.notes || "";
+    var r1 = el("div", "row"); r1.append(field("fe-prenom", "Prénom", prenom), field("fe-nom", "Nom", nom));
+    var r2 = el("div", "row"); r2.append(field("fe-mail", "E-mail", mail), field("fe-tel", "Téléphone", tel));
+    f.append(field("fe-civ", "Civilité", civ), r1, r2, field("fe-notes", "Notes privées (jamais visibles du membre)", notes));
+    var save = el("button", "btn", "Enregistrer les modifications"); save.type = "submit"; f.append(save);
+    f.addEventListener("submit", function (ev) {
+      ev.preventDefault();
+      if (!prenom.value.trim() || !nom.value.trim()) { fMsg(errText("CHAMP_MANQUANT"), "err"); return; }
+      save.disabled = true;
+      ficheRun(rpc("admin_update_member", { p_code: m.code, p_civilite: civ.value, p_nom: nom.value.trim(), p_prenom: prenom.value.trim(), p_telephone: tel.value.trim(), p_email: mail.value.trim(), p_notes: notes.value })).then(function (ok) { if (ok) fMsg("Fiche enregistrée.", "ok"); else save.disabled = false; });
+    });
+    var info = el("div", "block st2");
+    info.append(el("p", "eyebrow", "Activité"));
+    var dl = el("dl");
+    function di(k, v) { var d = el("div"); d.append(el("dt", null, k), el("dd", null, v)); dl.append(d); }
+    di("Enregistré le", m.date_enregistrement ? fmtDate(m.date_enregistrement) : "—");
+    di("Dernière connexion", m.derniere_connexion ? fmtDateTime(m.derniere_connexion) : "Jamais");
+    var locked = m.bloque_jusqua && new Date(m.bloque_jusqua) > new Date();
+    di("Échecs de connexion", String(m.echecs || 0) + (locked ? " · compte bloqué jusqu'à " + fmtDateTime(m.bloque_jusqua) : ""));
+    if (m.motif_statut) di("Motif", m.motif_statut);
+    info.append(dl);
+
+    var act = el("div", "block st3");
+    act.append(el("p", "eyebrow", "Actions"));
+    var row = el("div", "actions");
+    if (st === "en_attente") {
+      var ok = el("button", "btn small", "Valider l'inscription"); ok.type = "button";
+      ok.addEventListener("click", function () { ok.disabled = true; ficheRun(rpc("admin_set_status", { p_code: m.code, p_statut: "actif", p_motif: null })); });
+      row.append(ok, confirmBtn("Refuser l'inscription", "Sûr ?", true, function () { ficheRun(rpc("admin_set_status", { p_code: m.code, p_statut: "archive", p_motif: "Inscription refusée" })); }));
+    }
+    if (st === "actif") {
+      var motif = el("input", "mini-in"); motif.type = "text"; motif.placeholder = "Motif (facultatif)"; motif.style.width = "13rem"; motif.maxLength = 120; motif.setAttribute("aria-label", "Motif de la suspension");
+      var sus = el("button", "btn ghost small", "Suspendre"); sus.type = "button"; sus.disabled = self;
+      sus.addEventListener("click", function () { sus.disabled = true; ficheRun(rpc("admin_set_status", { p_code: m.code, p_statut: "suspendu", p_motif: motif.value })); });
+      row.append(motif, sus);
+    }
+    if (st === "suspendu" || st === "archive") {
+      var re = el("button", "btn small", "Réactiver le compte"); re.type = "button";
+      re.addEventListener("click", function () { re.disabled = true; ficheRun(rpc("admin_set_status", { p_code: m.code, p_statut: "actif", p_motif: null })); });
+      row.append(re);
+    }
+    var grp = el("button", "btn ghost small", m.groupe === "Admin" ? "Passer dans le groupe Users" : "Passer dans le groupe Admin"); grp.type = "button"; grp.disabled = self;
+    grp.addEventListener("click", function () { grp.disabled = true; ficheRun(rpc("admin_set_group", { p_code: m.code, p_groupe: m.groupe === "Admin" ? "Users" : "Admin" })).then(function (ok) { if (ok && m.groupe !== "Admin") fMsg("Groupe modifié. Pour qu'il se connecte comme organisateur, il faut aussi lui créer un compte e-mail (voir le guide).", "ok"); }); });
+    row.append(grp);
+    var np = el("button", "btn ghost small", "Nouveau code secret"); np.type = "button";
+    np.addEventListener("click", function () {
+      np.disabled = true;
+      rpc("admin_new_pin", { p_code: m.code }).then(function (r) {
+        if (r && r.ok === false) { fMsg(errText(r.erreur), "err"); return; }
+        var box = $("#fiche-msg"); box.className = "msg ok"; box.hidden = false; box.textContent = "";
+        var ln = el("div", "given"); ln.append(el("span", null, "Nouveau code secret de " + (m.prenom || m.code) + " : "), el("code", null, r.pin), el("span", null, "Transmettez-le-lui. Il ne sera plus affiché."));
+        box.append(ln); refreshAdmin();
+      }).catch(function () { fMsg("Le code n'a pas pu être changé. Réessayez.", "err"); }).then(function () { np.disabled = false; });
+    });
+    row.append(np);
+    if ((m.echecs || 0) > 0 || locked) {
+      var ul = el("button", "btn ghost small", "Débloquer la connexion"); ul.type = "button";
+      ul.addEventListener("click", function () { ul.disabled = true; ficheRun(rpc("admin_unlock", { p_code: m.code })); });
+      row.append(ul);
+    }
+    var wel = el("button", "btn ghost small", "Copier le message d'accueil"); wel.type = "button";
+    wel.addEventListener("click", function () {
+      var url = location.href.split("#")[0].split("?")[0];
+      var t = "Bonjour " + (m.prenom || "") + ",\n\nBienvenue dans la cagnotte bourse_H ! Nous jouons ensemble et nous partageons les gains.\n\nVotre adresse : " + url + "\nVotre code utilisateur : " + m.code + "\nVotre code secret vous est transmis à part.\n\nRappel : le montant indiqué sur le site doit ensuite être envoyé à l'organisateur. Les jeux d'argent comportent des risques : on ne gagne pas tous les jours.";
+      copyText(t).then(function () { fMsg("Message copié. Collez-le dans WhatsApp, un SMS ou un e-mail.", "ok"); }).catch(function () { fMsg("La copie n'a pas fonctionné.", "err"); });
+    });
+    row.append(wel);
+    act.append(row);
+    var danger = el("div", "actions");
+    if (st !== "archive" && st !== "en_attente") { var ar = confirmBtn("Archiver le membre", "Sûr ?", true, function (b) { ficheRun(rpc("admin_set_status", { p_code: m.code, p_statut: "archive", p_motif: "Archivé" })); }); ar.disabled = self; danger.append(ar); }
+    var del = confirmBtn("Supprimer définitivement", "Sûr ? Irréversible", true, function (b) { ficheRun(rpc("admin_delete_member", { p_code: m.code })).then(function (ok) { if (ok) { dlg.close(); } else b.disabled = false; }); });
+    del.disabled = self; danger.append(del);
+    act.append(danger, el("p", "who", "Un membre qui a déjà un dépôt ne peut pas être supprimé : archivez-le, il ne pourra plus se connecter mais son historique reste."));
+    body.append(f, info, act);
+    body.append(el("p", "who", "Interdit : se modifier soi-même en groupe, statut ou suppression (pour éviter de se couper l'accès)."));
+    body.lastChild.hidden = !self;
+  }
+
+  function memberSessionRows(code) {
+    return sortSessions(A.sessions).map(function (s) {
+      var st = sStats(s.id), fx = fees(s, st);
+      var inscrit = A.inscriptions.some(function (c) { return c.session_id === s.id && c.code === code; });
+      var d = st.deposits.filter(function (x) { return x.code === code; })[0] || null;
+      return { s: s, inscrit: inscrit, d: d, px: d ? fx.by[code] || null : null };
+    });
+  }
+  function ficheTabDepots(m, body) {
+    var box = el("div", "block st3");
+    box.append(el("p", "eyebrow", "Dépôts de " + (m.prenom || m.code) + " dans les sessions"));
+    var list = memberSessionRows(m.code);
+    if (!list.length) box.append(el("p", "empty", "Aucune session pour l'instant."));
+    else {
+      var tb = el("div", "tablebox"), t = el("table"), th = el("thead"), hr = el("tr");
+      ["Session", "Dépôt", "Réception", "Actions"].forEach(function (h, i) { hr.append(el("th", i === 1 ? "num" : null, h)); }); th.append(hr); t.append(th);
+      var tbody = el("tbody");
+      list.forEach(function (x) {
+        var tr = el("tr"), c1 = el("td"); c1.append(el("div", null, titleOf(x.s)), el("div", "who", typeOf(x.s) + (x.s.ouverte ? " · ouverte" : " · close")));
+        tr.append(c1, el("td", "num nw", x.d ? money(x.d.montant) : "—"));
+        var rc = el("td"); rc.append(x.d ? el("span", "pill" + (x.d.state === "recu" ? "" : " off"), x.d.state === "recu" ? "Reçu" : x.d.state === "modifie" ? "Modifié" : "En attente") : el("span", "who", x.inscrit ? "Pas de dépôt" : "Non inscrit"));
+        var ac = el("td", "acts");
+        if (!x.inscrit) {
+          var jn = mini("Inscrire", "Inscrire le membre à cette session"); jn.addEventListener("click", function () { jn.disabled = true; ficheRun(rpc("admin_join_member", { p_session: x.s.id, p_code: m.code })); }); ac.append(jn);
+        } else if (!x.d) {
+          var inp = el("input", "mini-in mono"); inp.type = "text"; inp.inputMode = "decimal"; inp.placeholder = "Montant"; inp.maxLength = 9; inp.setAttribute("aria-label", "Montant du dépôt en euros");
+          var sv = mini("Saisir le dépôt", "Enregistrer le dépôt à sa place");
+          sv.addEventListener("click", function () {
+            var v = parseAmount(inp.value); if (!(v > 0)) { fMsg(errText("MONTANT_INVALIDE"), "err"); return; }
+            sv.disabled = true; ficheRun(rpc("admin_set_deposit_for", { p_session: x.s.id, p_code: m.code, p_montant: v }));
+          });
+          var lv = mini("Désinscrire", "Retirer le membre de la session"); lv.addEventListener("click", function () { lv.disabled = true; ficheRun(rpc("admin_leave_member", { p_session: x.s.id, p_code: m.code })); });
+          ac.append(inp, sv, lv);
+        } else {
+          var rb = mini(x.d.state === "recu" ? "Annuler" : "Marquer reçu", x.d.state === "recu" ? "Annuler la réception" : "Marquer le dépôt reçu");
+          rb.addEventListener("click", function () { rb.disabled = true; ficheRun(rpc(x.d.state === "recu" ? "admin_unmark_received" : "admin_mark_received", { p_session: x.s.id, p_code: m.code })); });
+          var rm = confirmBtn("Retirer le dépôt", "Sûr ?", true, function () { ficheRun(rpc("admin_delete_deposit", { p_session: x.s.id, p_code: m.code })); });
+          rm.className = "btn ghost small danger"; ac.append(rb, rm);
+        }
+        tr.append(rc, ac); tbody.append(tr);
+      });
+      t.append(tbody); tb.append(t); box.append(tb);
+      var host = el("div"); box.append(host);
+      exportBar(host, function () {
+        return { headers: ["Code", "Nom", "Session", "Type", "Dépôt (€)", "Réception"], rows: list.filter(function (x) { return x.d; }).map(function (x) { return [m.code, fullName(m), titleOf(x.s), x.s.type, numFr(x.d.montant), x.d.state === "recu" ? "Reçu" : x.d.state === "modifie" ? "Modifié" : "En attente"]; }) };
+      }, "depots-" + m.code);
+    }
+    body.append(box);
+  }
+  function ficheTabGains(m, body) {
+    var box = el("div", "block st4");
+    box.append(el("p", "eyebrow", "Gains de " + (m.prenom || m.code) + " par session"));
+    var list = memberSessionRows(m.code).filter(function (x) { return x.d; });
+    if (!list.length) box.append(el("p", "empty", "Aucun dépôt pour l'instant."));
+    else {
+      var tb = el("div", "tablebox"), t = el("table"), th = el("thead"), hr = el("tr");
+      ["Session", "État", "Dépôt", "Part brute", "Frais", "Part nette"].forEach(function (h, i) { hr.append(el("th", i >= 2 ? "num" : null, h)); }); th.append(hr); t.append(th);
+      var tbody = el("tbody"), tot = { open: { dep: 0, b: 0, f: 0, n: 0 }, closed: { dep: 0, b: 0, f: 0, n: 0 } };
+      list.forEach(function (x) {
+        var tr = el("tr"), c1 = el("td"); c1.append(el("div", null, titleOf(x.s)), el("div", "who", typeOf(x.s)));
+        var acc = x.s.ouverte ? tot.open : tot.closed;
+        tr.append(c1, el("td", "nw", x.s.ouverte ? "Ouverte" : "Close"), el("td", "num nw", money(x.d.montant)));
+        if (x.px) { acc.dep += x.d.montant; acc.b += x.px.brute; acc.f += x.px.frais; acc.n += x.px.nette; }
+        tr.append(el("td", "num nw", x.px ? signed(x.px.brute) : "—"), el("td", "num nw", x.px ? (x.px.frais > 0 ? "−" + money(x.px.frais) : money(0)) : "—"), el("td", "num nw", x.px ? signed(x.px.nette) : "—"));
+        tbody.append(tr);
+      });
+      t.append(tbody); tb.append(t); box.append(tb);
+      var sum = el("div", "tablebox"), t2 = el("table"), h2 = el("thead"), r2 = el("tr");
+      ["Total", "Dépôts reçus", "Part brute", "Frais", "Part nette"].forEach(function (h, i) { r2.append(el("th", i ? "num" : null, h)); }); h2.append(r2); t2.append(h2);
+      var b2 = el("tbody");
+      [["Sessions ouvertes", tot.open], ["Sessions closes", tot.closed], ["Toutes les sessions", { dep: tot.open.dep + tot.closed.dep, b: tot.open.b + tot.closed.b, f: tot.open.f + tot.closed.f, n: tot.open.n + tot.closed.n }]].forEach(function (z, i) {
+        var tr = el("tr" + (i === 2 ? "" : ""));
+        tr.append(el("td", i === 2 ? "totals" : null, z[0]), el("td", "num nw", money(z[1].dep)), el("td", "num nw", signed(z[1].b)), el("td", "num nw", z[1].f > 0 ? "−" + money(z[1].f) : money(0)), el("td", "num nw totals", signed(z[1].n)));
+        b2.append(tr);
+      });
+      t2.append(b2); sum.append(t2); box.append(sum);
+      var host = el("div"); box.append(host);
+      exportBar(host, function () {
+        return { headers: ["Code", "Nom", "Session", "Type", "État de la session", "Dépôt (€)", "Part brute (€)", "Frais (€)", "Part nette (€)"], rows: list.map(function (x) { return [m.code, fullName(m), titleOf(x.s), x.s.type, x.s.ouverte ? "Ouverte" : "Close", numFr(x.d.montant), x.px ? numFr(x.px.brute) : "", x.px ? numFr(x.px.frais) : "", x.px ? numFr(x.px.nette) : ""]; }) };
+      }, "gains-" + m.code);
+    }
+    body.append(box);
+  }
+  function ficheTabHisto(m, body) {
+    var box = el("div", "block st2"); box.append(el("p", "eyebrow", "Historique de la fiche"));
+    var holder = el("p", "empty", "Chargement…"); box.append(holder); body.append(box);
+    var code = m.code;
+    rpc("admin_member_audit", { p_code: code }).then(function (r) {
+      if (ficheCode !== code || ficheTab !== "histo") return;
+      if (!r || !r.ok) { holder.textContent = errText(r && r.erreur); return; }
+      if (!r.lignes.length) { holder.textContent = "Rien à signaler pour l'instant."; return; }
+      holder.remove();
+      var tb = el("div", "tablebox"), t = el("table"), th = el("thead"), hr = el("tr");
+      ["Quand", "Qui", "Quoi"].forEach(function (h) { hr.append(el("th", null, h)); }); th.append(hr); t.append(th);
+      var tbody = el("tbody");
+      r.lignes.forEach(function (l) {
+        var tr = el("tr"), q = el("td"); var d = l.details || {};
+        var extra = d.vers ? " → " + d.vers : d.motif ? " (" + d.motif + ")" : d.montant ? " : " + money(d.montant) : "";
+        tr.append(el("td", "nw", fmtDateTime(l.at)), el("td", null, l.acteur || "—"), el("td", null, (ACTIONS[l.action] || l.action) + extra));
+        tbody.append(tr);
+      });
+      t.append(tbody); tb.append(t); box.append(tb);
+    }).catch(function () { holder.textContent = "L'historique n'a pas pu être chargé."; });
+  }
+
+  /* ===== Rapports : dépôts et gains ===== */
+  function renderReports() {
+    fillSelect($("#rd-membre"), memberOptions("Tous les membres")); fillSelect($("#rd-sess"), sessionOptions("Toutes les sessions"));
+    fillSelect($("#rd-type"), TYPE_OPTS); fillSelect($("#rd-etat"), [["", "Tous les états"], ["recu", "Reçus"], ["attente", "En attente"], ["modifie", "Modifiés"]]);
+    fillSelect($("#rg-membre"), memberOptions("Tous les membres")); fillSelect($("#rg-sess"), sessionOptions("Toutes les sessions"));
+    fillSelect($("#rg-type"), TYPE_OPTS); fillSelect($("#rg-etat"), [["", "Toutes les sessions"], ["ouverte", "Sessions ouvertes"], ["close", "Sessions closes"]]);
+    renderDepositsReport(); renderGainsReport();
+  }
+  ["#rd-membre", "#rd-sess", "#rd-type", "#rd-etat"].forEach(function (s) { $(s).addEventListener("change", renderDepositsReport); });
+  ["#rg-membre", "#rg-sess", "#rg-type", "#rg-etat"].forEach(function (s) { $(s).addEventListener("change", renderGainsReport); });
+  function head(node, cols) { node.textContent = ""; var tr = el("tr"); cols.forEach(function (c, i) { tr.append(el("th", c[1] ? "num" : null, c[0])); }); node.append(tr); }
+
+  function depositRows() {
+    var fm = $("#rd-membre").value, fs = $("#rd-sess").value, ft = $("#rd-type").value, fe = $("#rd-etat").value;
+    var out = [];
+    A.sessions.forEach(function (s) {
+      if (fs && s.id !== fs) return; if (ft && s.type !== ft) return;
+      sStats(s.id).deposits.forEach(function (d) {
+        if (fm && d.code !== fm) return; if (fe && d.state !== fe) return;
+        out.push({ s: s, d: d });
+      });
+    });
+    out.sort(function (a, b) { return String(b.s.date_debut).localeCompare(String(a.s.date_debut)) || a.d.code.localeCompare(b.d.code); });
+    return out;
+  }
+  function renderDepositsReport() {
+    head($("#rd-head"), [["Membre"], ["Session"], ["Type"], ["Dépôt", 1], ["Réception"]]);
+    var body = $("#rd-rows"); body.textContent = ""; var rows = depositRows(), sum = 0, sumRecu = 0;
+    rows.forEach(function (x) {
+      sum += x.d.montant; if (x.d.state === "recu") sumRecu += x.d.montant;
+      var tr = el("tr"), c1 = el("td"); var mm = memberByCode(x.d.code);
+      var nb = el("button", "linklike", mm ? fullName(mm) : x.d.code); nb.type = "button"; nb.addEventListener("click", function () { openFiche(x.d.code, "depots"); });
+      c1.append(nb, el("div", "who mono", x.d.code));
+      var rc = el("td"); rc.append(el("span", "pill" + (x.d.state === "recu" ? "" : " off"), x.d.state === "recu" ? "Reçu" : x.d.state === "modifie" ? "Modifié" : "En attente"));
+      tr.append(c1, el("td", null, titleOf(x.s)), el("td", "nw", x.s.type), el("td", "num nw", money(x.d.montant)), rc); body.append(tr);
+    });
+    $("#rd-count").textContent = plural(rows.length, "dépôt", "dépôts") + " · Total " + money(sum) + " (dont " + money(sumRecu) + " reçus)";
+    exportBar($("#rd-export"), function () {
+      return { headers: ["Code", "Nom", "Session", "Type", "Période", "Dépôt (€)", "Réception"], rows: depositRows().map(function (x) { var mm = memberByCode(x.d.code); return [x.d.code, mm ? fullName(mm) : "", titleOf(x.s), x.s.type, x.s.date_debut + " au " + x.s.date_fin, numFr(x.d.montant), x.d.state === "recu" ? "Reçu" : x.d.state === "modifie" ? "Modifié" : "En attente"]; }) };
+    }, "depots");
+  }
+
+  function gainRows() {
+    var fm = $("#rg-membre").value, fs = $("#rg-sess").value, ft = $("#rg-type").value, fe = $("#rg-etat").value;
+    var out = [];
+    A.sessions.forEach(function (s) {
+      if (fs && s.id !== fs) return; if (ft && s.type !== ft) return;
+      if (fe === "ouverte" && !s.ouverte) return; if (fe === "close" && s.ouverte) return;
+      var st = sStats(s.id), fx = fees(s, st);
+      st.deposits.forEach(function (d) {
+        if (fm && d.code !== fm) return;
+        var px = fx.by[d.code]; if (!px) return;
+        out.push({ s: s, d: d, px: px, cum: st.cum });
+      });
+    });
+    out.sort(function (a, b) { return String(b.s.date_debut).localeCompare(String(a.s.date_debut)) || a.d.code.localeCompare(b.d.code); });
+    return out;
+  }
+  function renderGainsReport() {
+    head($("#rg-head"), [["Membre"], ["Session"], ["État"], ["Dépôt reçu", 1], ["Part brute", 1], ["Frais", 1], ["Part nette", 1]]);
+    var body = $("#rg-rows"); body.textContent = ""; var rows = gainRows(), t = { dep: 0, b: 0, f: 0, n: 0 };
+    rows.forEach(function (x) {
+      t.dep += x.d.montant; t.b += x.px.brute; t.f += x.px.frais; t.n += x.px.nette;
+      var tr = el("tr"), c1 = el("td"); var mm = memberByCode(x.d.code);
+      var nb = el("button", "linklike", mm ? fullName(mm) : x.d.code); nb.type = "button"; nb.addEventListener("click", function () { openFiche(x.d.code, "gains"); });
+      c1.append(nb, el("div", "who mono", x.d.code));
+      tr.append(c1, el("td", null, titleOf(x.s)), el("td", "nw", x.s.ouverte ? "Ouverte" : "Close"), el("td", "num nw", money(x.d.montant)), el("td", "num nw", signed(x.px.brute)), el("td", "num nw", x.px.frais > 0 ? "−" + money(x.px.frais) : money(0)), el("td", "num nw", signed(x.px.nette)));
+      body.append(tr);
+    });
+    $("#rg-count").textContent = plural(rows.length, "ligne", "lignes") + " · Dépôts reçus " + money(t.dep) + " · Part brute " + signed(t.b) + " · Frais de service " + money(t.f) + " · Part nette " + signed(t.n);
+    exportBar($("#rg-export"), function () {
+      return { headers: ["Code", "Nom", "Session", "Type", "État de la session", "Dépôt reçu (€)", "Résultat de la session (€)", "Part brute (€)", "Frais (€)", "Part nette (€)"], rows: gainRows().map(function (x) { var mm = memberByCode(x.d.code); return [x.d.code, mm ? fullName(mm) : "", titleOf(x.s), x.s.type, x.s.ouverte ? "Ouverte" : "Close", numFr(x.d.montant), numFr(x.cum), numFr(x.px.brute), numFr(x.px.frais), numFr(x.px.nette)]; }) };
+    }, "gains");
+  }
+
 
   /* Sessions (organisateur) */
   (function () {
@@ -989,7 +1588,7 @@ details summary { color: var(--ink); }
     setInterval(function () {
       if (document.hidden) return;
       if (member && !(document.activeElement && document.activeElement.id && document.activeElement.id.indexOf("dep-in-") === 0)) refreshMember();
-      if (adminOn) refreshAdmin();
+      if (adminOn && !ficheOpen()) refreshAdmin();
     }, 30000);
   }
 })();
